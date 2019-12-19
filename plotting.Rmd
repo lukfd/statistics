@@ -1,0 +1,64 @@
+---
+title: "ForPresentation"
+author: "Catherine Lindsay, Jack Hardwick, Luca Comba"
+date: "12/17/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(knitr)
+library(tidyverse)
+library(skimr)
+library(car)
+opts_chunk$set(eval=TRUE)
+```
+
+```{r}
+app = read_csv("google_cleaned_final.csv")
+```
+
+```{r}
+m2 = lm((Rating)^4 ~ log(Reviews) + days_since_last_update + Type + Price2 + NumberOfInstalls, data=app)
+```
+
+
+```{r}
+ggplot(data=app,aes(x=days_since_last_update, y=(Rating)^4)) + geom_point(alpha=0.5) + geom_smooth(method=lm, se=TRUE)
+```
+
+
+```{r}
+ggplot(data=app,aes(x=Price2, y=(Rating)^4)) + geom_point(alpha=0.5) + geom_smooth(method=lm, se=TRUE) + xlim(0,10)
+```
+
+```{r}
+ggplot(data=app,aes(x=Price2, y=(Rating)^4)) + geom_point(alpha=0.5) + geom_smooth(method=lm, se=TRUE)
+```
+
+
+```{r}
+ggplot(data=app,aes(x=NumberOfInstalls, y=(Rating)^4)) + geom_point(alpha=0.5) + geom_smooth(method=lm, se=TRUE)
+```
+
+
+```{r}
+scatter.smooth(app$NumberOfInstalls, app$Rating)
+```
+
+```{r}
+boxplot((app$Rating)^4~app$TypePaid)
+```
+```{r}
+library(GGally)
+ggpairs(c(app$Rating, app$Size, app$NumberOfInstalls))
+```
+
+
+
+```{r}
+ggplot(app, aes(Type, Rating)) + geom_boxplot(varwidth=T, fill="plum") + 
+    labs(title="Rating grouped by Free or Paid",
+         x="Type",
+         y="Rating")
+```

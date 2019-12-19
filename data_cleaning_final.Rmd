@@ -1,0 +1,188 @@
+---
+title: "Google Play Store Apps Cleaning code"
+author: "Catherine Lindsay, Jack Hardwick, Luca Comba"
+date: "23/11/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(knitr)
+library(tidyverse)
+library(skimr)
+opts_chunk$set(eval=TRUE)
+```
+
+# Importing the data
+
+First we need to import the data from the Keggle source website for the `googleplaystore.csv` dataset.
+
+```{r}
+app = read_csv("googleplaystore.csv")
+```
+
+by uploading the dataset the result is :
+
+> googleplaystore <- read_csv("Project/googleplaystore.csv")
+Parsed with column specification:
+cols(
+  App = col_character(),
+  Category = col_character(),
+  Rating = col_double(),
+  Reviews = col_double(),
+  Size = col_character(),
+  Installs = col_character(),
+  Type = col_character(),
+  Price = col_character(),
+  `Content Rating` = col_character(),
+  Genres = col_character(),
+  `Last Updated` = col_character(),
+  `Current Ver` = col_character(),
+  `Android Ver` = col_character()
+)
+Warning: 2 parsing failures.
+  row     col               expected     actual                          file
+10473 Reviews no trailing characters M          'Project/googleplaystore.csv'
+> 10473 NA      13 columns             12 columns 'Project/googleplaystore.csv'`
+
+so we read it with `app = read_csv("groupA-googleapp.csv", n_max = 10472, na = c("", NA, "NaN"))`
+
+```{r}
+app = read_csv("googleplaystore.csv", n_max = 10472, na = c("", NA, "NaN"))
+```
+
+# Data Types
+
+- But we have NaN value for the rating, which we replaced with NA r value that we can easily omit from the dataset by using na.omit(app) and creating a new app_cleaned.
+
+```{r}
+test = is.na(app)
+app_cleaned <- na.omit(app)
+```
+
+```{r}
+skim(app)
+str(app)
+```
+
+```{r}
+complete.cases("groupA-googleapp.csv")
+```
+
+### Adjasting the dataset
+
+- Another mistake in the data is one date that have 1.0.19 for the year and which we can adjust it. We should convert the dates into all same type dates such that they all look the same. One way we can do it unisng the `lubridate package`.
+
+```{r}
+library(lubridate)
+app_cleaned <- app_cleaned %>%
+  mutate(`Last Updated` = mdy(app_cleaned$`Last Updated`))
+```
+
+- Need to make new variable for difference in 
+
+```{r}
+app_cleaned <- app_cleaned %>%
+  mutate("Today"=mdy("12/9/2019"))
+
+```
+
+
+```{r}
+app_cleaned <- app_cleaned %>%
+  mutate(`days_since_last_update`= difftime(Today,`Last Updated`))
+```
+- Another improvement that we can make is the Free or Paid Type which it can be binary value.
+Really?
+
+- Prices, Sizes and Installs should have been in numeric form.
+
+```{r}
+app_cleaned <- app_cleaned %>%
+  mutate(Price2 = parse_number(Price))
+```
+
+- Another problem that we have is multiple information refering to one predictor such as `Art & Design;Action & Adventure` which we can combine them into one like it is.
+
+- Counting if there are still NA values
+```{r}
+app_cleaned %>% 
+  group_by(Rating) %>%
+  
+summarize(n = n()) %>%
+  arrange(desc(n))
+```
+
+```{r}
+app_cleaned %>% 
+  group_by(Size) %>%
+  
+summarize(n = n()) %>%
+  arrange(desc(n))
+```
+
+### Renaming
+
+```{r}
+names(app_cleaned)
+```
+
+- variables name are good, beside `Content Rating`, `Last Updated`, `Current Version` and `Android Version` because they have a space in the name.
+
+```{r}
+app_cleaned <- app_cleaned %>%
+  rename(`LastUpdated` = `Last Updated`,`CurrentVersion` = `Current Ver`,`AndroidVersion` = `Android Ver`,`ContentRating` = `Content Rating`)
+```
+
+# Grouping Size
+
+Dealing with size
+
+```{r}
+app_cleaned <- app_cleaned %>%
+  #mutate(isMB = ifelse(str_sub(Size, start = -1, end = -1) == "M", str_sub(Size, start = -1, end = -1), str_sub(Size, start = -1, end = -1)))
+  mutate(isMB = str_sub(Size, start = -1, end = -1)) %>%
+    ungroup() %>%
+      mutate(Size2 = str_sub(Size, start = 1, end = -2)) %>%
+        mutate(Size2 = parse_number(Size2))
+
+app_cleaned <- app_cleaned %>%
+  mutate(Size3 = case_when(isMB == "M" ~ Size2, isMB == "k" ~  Size2*1000, isMB == "e" ~ Size2))
+  
+#app_cleaned <- app_cleaned %>%
+#  mutate(isMb = ) grepl(Size, "M")
+```
+
+Dealing with number of installs
+
+```{r}
+app_cleaned <- app_cleaned %>%
+  mutate(NumberOfInstalls = str_sub(Installs, start = 0, end = -2))
+
+# make it numerical
+#app_cleaned <- app_cleaned %>%
+#  mutate(NumberOfInstalls = as.numeric(NumberOfInstalls))
+```
+
+Cleaning `Installs` to put in three different bins in the predictor `NumberOfInstalls`
+
+```{r}
+app_cleaned <- app_cleaned %>%
+  mutate(NumberOfInstalls = parse_number(Installs)) %>%
+  mutate(NumberOfInstalls = case_when(NumberOfInstalls<10000~"LessThan10000",
+                                      NumberOfInstalls>=10000 & NumberOfInstalls<500000~"Between10000&500000",
+                                      NumberOfInstalls>=500000 & NumberOfInstalls<5000000~"Between500000&500000",
+                                      NumberOfInstalls>=5000000~"GreaterThan5000000")) %>%
+  mutate(NumberOfInstalls=fct_relevel(NumberOfInstalls,"LessThan10000"))
+```
+
+# Exporting Csv
+
+```{r, eval=FALSE}
+write_csv(app_cleaned, "google_cleaned_final.csv")
+```
+
+# Things to Address
+
+- Following Conditions?
+- Independet ? Random ?
