@@ -1,0 +1,27 @@
+---
+title: "Sanremo"
+author: "Luca Comba"
+date: "2/8/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Studio statistico del festival di Sanremo
+
+La domanda da cui potremo partire potrebbe essere se davvero il Festival di Sanremo sta migliorando per gli audiance share telespettatori. 
+
+Sarebbe insteressante sapere se il televoto veramente incidesse sul vincitore del festival.
+
+# Indice
+
+- The data set
+- Audience data
+- Votare il festival
+- Conduttori
+- Canzoni vincenti
+
+## 
+
