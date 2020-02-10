@@ -11,7 +11,11 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Studio statistico del festival di Sanremo
 
-La domanda da cui potremo partire potrebbe essere se davvero il Festival di Sanremo sta migliorando per gli audiance share telespettatori. 
+Una domanda statistica relativa ai conduttore è quanto vale la percentuale dei conduttori maschi rispetto ai conduttori femmmina, ricordando che ci sono state delle edizioni con più di un conduttore. In quel caso nel dataset sono riferiti con il simbolo `C` per "coppia".
+
+Un altra domanda statistica relativa al sesso è quella se nelle edizioni del festival ci sono stati più vincitori maschi o femmine oppure coppie o gruppi musicali.
+
+La domanda riguardante l'analisi degli ascolti televisivi è quella se il `gender` del conduttore è correlato al successo degli ascolti. Questa domanda si può rispondere costruendo una analisi lineare e un modello statistico che potrebbe predirre i dati share televisi in futuro.
 
 Sarebbe insteressante sapere se il televoto veramente incidesse sul vincitore del festival.
 

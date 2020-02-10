@@ -1,71 +1,71 @@
-year,conduttore,conduttore_gender,
-1951,Nunzio Filogamo,M,
-1952,Nunzio Filogamo,M
-1953,Nunzio Filogamo,M
-1954,Nunzio Filogamo,M
-1955,Armando Pizzo,M
-1956,Fausto Tommei,M
-1957,Nunzio Filogamo,M
-1958,Gianni Agus,M
-1959,Enzo Tortora,M
-1960,Paolo Ferrari ed Enza Sampo,C
-1961,Lilli Lembo,F
-1962,Renato Tagliani,M
-1963,Mike Bongiorno,M
-1964,Mike Bongiorno,M
-1965,Mike Bongiorno,M
-1966,Mike Bongiorno,M
-1967,Mike Bongiorno,M
-1968,Pippo Baudo,F
-1969,Nuccio Costa,M
-1970,Nuccio Costa,M
-1971,Carlo Giuffre ed Elsa Martinelli,C
-1972,Mike Bongiorno,M
-1973,Mike Bongiorno,M
-1974,Corrado,M
-1975,Mike Bongiorno,M
-1976,Giancarlo Guardabassi,M
-1977,Mike Bongiorno,M
-1978,Maria Giovanna Elmi,F
-1979,Mike Bongiorno,M
-1980,Claudio Cecchetto,M
-1981,Claudio Cecchetto,M
-1982,Claudio Cecchetto,M
-1983,Andrea Giordana,M
-1984,Pippo Baudo,M
-1985,Pippo Baudo,M
-1986,Loretta Goggi,F
-1987,Pippo Baudo,M
-1988,Miguel Bose e Gabriella Carlucci,C
-1989,Rosita Celentano-Paola Dominguin-Danny Quinn e Gianmarco Tognazzi,C
-1990,Johnny Dorelli e Gabriella Carlucci,C
-1991,Andrea Occhipinti ed Edwige Fenech,C
-1992,Pippo Baudo,M
-1993,Pippo Baudo,M
-1994,Pippo Baudo,M
-1995,Pippo Baudo,M
-1996,Pippo Baudo,M
-1997,Mike Bongiorno,M
-1998,Raimondo Vianello,M
-1999,Fabio Fazio,M
-2000,Fabio Fazio,M
-2001,Raffaella Carra,F
-2002,Pippo Baudo,M
-2003,Pippo Baudo,M
-2004,Simona Ventura,F
-2005,Paolo Bonolis,M
-2006,Giorgio Panariello,M
-2007,Pippo Baudo,M
-2008,Pippo Baudo,M
-2009,Paolo Bonolis,M
-2010,Antonella Clerici,F
-2011,Gianni Morandi,M
-2012,Gianni Morandi,M
-2013,Fabio Fazio e Luciana Littizzetto,C
-2014,Fabio Fazio e Luciana Littizzetto,C
-2015,Carlo Conti,M
-2016,Carlo Conti,M
-2017,Carlo Conti,M
-2018,Claudio Baglioni,M
-2019,Claudio Baglioni,M
-2020,Amadeus,M
+year,conduttore,conduttore_gender,vincitore_gender,tvshare,
+1951,Nunzio Filogamo,M,F,NA,
+1952,Nunzio Filogamo,M,F,NA,
+1953,Nunzio Filogamo,M,C,NA,
+1954,Nunzio Filogamo,M,C,NA,
+1955,Armando Pizzo,M,C,NA,
+1956,Fausto Tommei,M,F,NA,
+1957,Nunzio Filogamo,M,C,NA,
+1958,Gianni Agus,M,C,NA,
+1959,Enzo Tortora,M,C,NA,
+1960,Paolo Ferrari ed Enza Sampo,C,C,NA,
+1961,Lilli Lembo,F,C,NA,
+1962,Renato Tagliani,M,C,NA,
+1963,Mike Bongiorno,M,C,NA,
+1964,Mike Bongiorno,M,C,NA,
+1965,Mike Bongiorno,M,C,NA,
+1966,Mike Bongiorno,M,C,NA,
+1967,Mike Bongiorno,M,C,NA,
+1968,Pippo Baudo,F,C,NA,
+1969,Nuccio Costa,M,C,NA,
+1970,Nuccio Costa,M,C,NA,
+1971,Carlo Giuffre ed Elsa Martinelli,C,C,NA,
+1972,Mike Bongiorno,M,M,NA,
+1973,Mike Bongiorno,M,M,NA,
+1974,Corrado,M,F,NA,
+1975,Mike Bongiorno,M,F,NA,
+1976,Giancarlo Guardabassi,M,M,NA,
+1977,Mike Bongiorno,M,C,NA,
+1978,Maria Giovanna Elmi,F,C,NA,
+1979,Mike Bongiorno,M,M,NA,
+1980,Claudio Cecchetto,M,M,NA,
+1981,Claudio Cecchetto,M,F,NA,
+1982,Claudio Cecchetto,M,M,NA,
+1983,Andrea Giordana,M,F,NA,
+1984,Pippo Baudo,M,C,NA,
+1985,Pippo Baudo,M,C,NA,
+1986,Loretta Goggi,F,M,NA,
+1987,Pippo Baudo,M,C,68.71,
+1988,Miguel Bose e Gabriella Carlucci,C,M,63.35,
+1989,Rosita Celentano-Paola Dominguin-Danny Quinn e Gianmarco Tognazzi,C,C,66.13,
+1990,Johnny Dorelli e Gabriella Carlucci,C,C,63.88,
+1991,Andrea Occhipinti ed Edwige Fenech,C,M,52.29,
+1992,Pippo Baudo,M,M,60.32,
+1993,Pippo Baudo,M,M,56.11,
+1994,Pippo Baudo,M,M,53.63,
+1995,Pippo Baudo,M,F,66.42,
+1996,Pippo Baudo,M,M,52.99,
+1997,Mike Bongiorno,M,C,58.11,
+1998,Raimondo Vianello,M,F,52.62,
+1999,Fabio Fazio,M,F,56.02,
+2000,Fabio Fazio,M,C,54.25,
+2001,Raffaella Carra,F,F,47.42,
+2002,Pippo Baudo,M,C,54.02,
+2003,Pippo Baudo,M,F,43.44,
+2004,Simona Ventura,F,M,38.98,
+2005,Paolo Bonolis,M,M,52.79,
+2006,Giorgio Panariello,M,M,40.17,
+2007,Pippo Baudo,M,M,48.07,
+2008,Pippo Baudo,M,C,36.56,
+2009,Paolo Bonolis,M,M,47.96,
+2010,Antonella Clerici,F,M,47.84,
+2011,Gianni Morandi,M,M,47.70,
+2012,Gianni Morandi,M,F,47.29,
+2013,Fabio Fazio e Luciana Littizzetto,C,M,47.49,
+2014,Fabio Fazio e Luciana Littizzetto,C,F,39.32,
+2015,Carlo Conti,M,C,48.64,
+2016,Carlo Conti,M,C,49.58,
+2017,Carlo Conti,M,M,50.42,
+2018,Claudio Baglioni,M,C,52.16,
+2019,Claudio Baglioni,M,M,49.38,
+2020,Amadeus,M,M,54.78,
