@@ -3,8 +3,8 @@ title: "Google Play Store Apps"
 author: "Catherine Lindsay, Jack Hardwick, Luca Comba"
 date: "Fall 2019"
 output:
-  html_document: default
   pdf_document: default
+  html_document: default
 ---
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
