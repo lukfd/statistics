@@ -1,0 +1,70 @@
+---
+title: "Logo quality predicting companies' revenues"
+authors: Pam, Luca, Mitzi
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Abstract
+
+This research would like to study how companies' logo could have an impact on their revenues or profit. Logo are the face and represent more than just the name of the company, because through colors, shape, fonts and other design characteristics can transimt the company's values and qualities. In today's market, logo are used for mass communication and a company's logo are synonim of trademark and the company's brand. Therefore, we would like to use the data of some of the Fortune 1000 companies and add their information of their logo to better understand how their revenues or profit are related. There are a lot of design patterns used by companies, so it was easy for us to categoriez and create new variables for the dataset to insert logo's information. In this paper we will build a logistic model to predict if the logo can effectively predict the company's revenue. Then we would like to create more data, from the dataset that we already build, using some Machine Learning techniques for then try to predict the revenue or profit of a company given certain charistics of a logo.
+
+# The dataset
+
+The dataset called `logorev` come from the Fortune 1000 data set, which can be found (on keggle.com)[https://www.kaggle.com/Eruditepanda/fortune-1000-2018] and we picked 40 companies randomly selected from the original dataset, plus 17 companies that are famous and that their logo is recognizable (first 15 rows). From the Fortune 1000 companies, of the year 2018, we kept the data relative to their financial income with the variables: `Networth`, `Revenue`, `Profit`, `Ranking`. Then we started to create the variables related to their information of their companies logo such as `Font` which is the information on the type of Font character that they used for the logo, `Color - hex #` which are the colors presented in the logo as hexadecimal values, `Type of Logo` which are , `Living thing in the logo`, `Gradient (y,n)`.
+
+# Data Cleaning
+
+We first want to load the data in R.
+
+```{r}
+library(dplyr)
+library(readr)
+
+logorev <- read_csv("logorev.csv")
+View(logorev)
+attach(logorev)
+```
+
+### Renamining
+
+We would like to create a cleaner data set, 
+
+```{r}
+logorev_cleaned <- logorev
+names(logorev)
+```
+
+```{r}
+logorev_cleaned <- logorev_cleaned %>%
+  rename(`Name` = `Logo Names`, `Colors` = `Color - hex #`, `Number_of_colors` = `Number of Colors`, `Type_of_logo` = `Type of Logo`, `Living_in_logo` = `Living thing in the logo`, `Gradient` = `Gradient (y,n)`)
+```
+
+### Outliers
+```{r}
+attach(logorev_cleaned)
+sum(abs(Profit - mean(Profit)/ sd(Profit)) > 3.29)
+```
+
+### Missing Values
+
+# Assumptions
+
+### Linearity:
+```{r}
+hist()
+```
+
+### Independence
+
+### Normality
+
+### Equality Of Variance
+
+# Analysis
+
+
+# Conclusions
