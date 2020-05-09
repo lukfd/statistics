@@ -6,19 +6,23 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
 ```
 
 # Abstract
 
-This research would like to study how companies' logo could have an impact on their revenues or profit. Logo are the face and represent more than just the name of the company, because through colors, shape, fonts and other design characteristics can transimt the company's values and qualities. In today's market, logo are used for mass communication and a company's logo are synonim of trademark and the company's brand. Therefore, we would like to use the data of some of the Fortune 1000 companies and add their information of their logo to better understand how their revenues or profit are related. There are a lot of design patterns used by companies, so it was easy for us to categoriez and create new variables for the dataset to insert logo's information. In this paper we will build a logistic model to predict if the logo can effectively predict the company's revenue. Then we would like to create more data, from the dataset that we already build, using some Machine Learning techniques for then try to predict the revenue or profit of a company given certain charistics of a logo.
+This research would like to study how companies' logo could have an impact on their revenues or profit.Logo are the face and represent more than just the name of the company, because through colors, shape, fonts and other design characteristics can transmit the company's values and qualities.In today's market, they logo are used for mass communication and the company's logo are synomis of the trademark and the company's brand. Therefore, we used the data from Fortune 1000 companies and we added their information of their logo to better understand how their revenues or profit related to their logo. There are a lot of design patterns used by the companies, so it was easy for us to categorize and we created new variable for the data set to add the logo's information. Each variable will be measuring something different, the variables are: `Networth`, `Revenue`, `Profit`, `Ranking`. Networth is a variable that will not be in used, however Revenue and Profit will both be measure in million of dollars. The ranking also come from the Fortune 1000, depending what their ranking is in that list. In this paper we will build a logistic model to predict if the logo of the companies can effectively predict the company's revenue.Then we would like to create more data, from the data-set that we already build, using some Machine Learning techniques for example like a decision tree to then try to predict the revenue or profit of a company given certain charismatics of a logo.
 
 # The dataset
 
-The dataset called `logorev` come from the Fortune 1000 data set, which can be found (on keggle.com)[https://www.kaggle.com/Eruditepanda/fortune-1000-2018] and we picked 40 companies randomly selected from the original dataset, plus 17 companies that are famous and that their logo is recognizable (first 15 rows). From the Fortune 1000 companies, of the year 2018, we kept the data relative to their financial income with the variables: `Networth`, `Revenue`, `Profit`, `Ranking`. Then we started to create the variables related to their information of their companies logo such as `Font` which is the information on the type of Font character that they used for the logo, `Color - hex #` which are the colors presented in the logo as hexadecimal values, `Type of Logo` which are , `Living thing in the logo`, `Gradient (y,n)`.
+The data-set that is used in this project comes from Fortune 1000.Our data-set has about 60 logo's companies however, the companies were picked randomly by their ranked in the Fortune 1000. In additions to having the basic information of the logo as variable, we added more variable to help us distinguished the logo even more. The additional variable were: `Font` which is the information on the type of Font character that they used for the logo, `Color - hex #` which are the colors presented in the logo as hexadecimal values, `Type of Logo` which are , `Living thing in the logo`, `Gradient (y,n)`. In figure 1, there is a sample of the data-set that we are going to be using to answer this question.
+
+**Figure 1**
+![Alt text](figure1.png)
 
 # Data Cleaning
 
-We first want to load the data in R.
+The testing of our data is going to be done in R Studio and also in JUMP. However the cleaning of the data was being done by using R. We want to create a cleaner data set therefore it would be much easier to use in R Studio. By cleaning the data-set it made it much easier to find the outliers in the data. By running the following code we were able to plot the data point and see which data were the outliers. Using the Z-score that were greater than `3.29` we found that there were 57 outliers. But when we actually plot it we can see that there is actually less outliers as it shown in figure 2. This could be possible because our data set does have some companies that have a larger profit than the others.
 
 ```{r}
 library(dplyr)
@@ -29,9 +33,10 @@ View(logorev)
 attach(logorev)
 ```
 
-### Renamining
 
-We would like to create a cleaner data set, 
+#### Renamining
+
+We would like to create a cleaner data set, and make the name of the variable easy to read and without space so it will be easire to call them in `R`.
 
 ```{r}
 logorev_cleaned <- logorev
@@ -43,28 +48,281 @@ logorev_cleaned <- logorev_cleaned %>%
   rename(`Name` = `Logo Names`, `Colors` = `Color - hex #`, `Number_of_colors` = `Number of Colors`, `Type_of_logo` = `Type of Logo`, `Living_in_logo` = `Living thing in the logo`, `Gradient` = `Gradient (y,n)`)
 ```
 
-### Outliers
+
+#### Variables Type
+
+Because the variable `Gradient` and `Living in logo` are dichotomus variables we need to transform them as factors.
+
+```{r}
+### Making variables from numeric to factor
+cols <- c('Gradient', 'Living_in_logo')
+logorev_cleaned[cols] <- lapply(logorev_cleaned[cols], as.factor)
+```
+
+#### Outliers
+
+From the z scorse greate than `3.29` we can see that there are 57 outliers, but in the boxplot we would see that there actually less outliers. We although have some big companies that have larger profit than others.The variabilieties within cases is very large and only few companies have higher profit than other. We will need to consider this characteristic of our dataset later in our Analysis.
+
+
 ```{r}
 attach(logorev_cleaned)
+boxplot(Profit)
 sum(abs(Profit - mean(Profit)/ sd(Profit)) > 3.29)
 ```
 
-### Missing Values
+From the boxplot we can clearly see that there is a company that have a revenue greater than 400000 which is Walmart. So we might need to take in consideration this in our Analysis that there are some Companies' revenue that might influence the results.
+
+```{r}
+boxplot(Revenue)
+sum(abs(Revenue - mean(Revenue)/ sd(Revenue)) > 3.29)
+```
+
+For the variable `Ranking` we have almost all of the cases layed as outliers for the rule of Z-scores greater than 3.29. The boxplot shows that there are not any outliers. This discrepancy is related to the fact that we have large variances between the datapoints.
+
+```{r}
+boxplot(Ranking)
+sum(abs(Ranking - mean(Ranking)/ sd(Ranking)) > 3.29)
+```
+
+The variable `Number of colors` have also few outliers. If we localized them using the boxplot we can see that only two companies have a logo with 5 and 8 colors. If we use the z-scores we can calculate that there are 7 cases that can be possibly be outliers.
+
+```{r}
+boxplot(Number_of_colors)
+sum(abs(Number_of_colors - mean(Number_of_colors)/ sd(Number_of_colors)) > 3.29)
+```
+
+#### Missing Values
+
+We have not contiunued to input in our dataset the `networth` variable and the `font` variable, so those variables will have missing values.
 
 # Assumptions
 
-### Linearity:
+For deciding what would be the best way to predict profits or revenue of a company based on their Logo characteristic we would need to check the conditions of Linearity, Independence, Normality, Equality of Variance and if we have multicollinear variables. This way we can better understand our variable and how to use them in our Analysis.
+
+#### Linearity:
+
+As expected the scotterplot for the variable `Ranking` shows a positive path and it look like it is well randomly spread. 
+The `Profit` variable shows in the scatterplot that there are some outlies because of high leverage because fare away from the companies that have a lower profit. It could be helpful to consider to transform the variable.
+`Revenue`'s scatterplot also indicates that there are significant outliers and it looks like a logarithmic transformation is needed because it shows a parabolic shape in the distribution of the data points.
+
 ```{r}
-hist()
+plot(Ranking)
+plot(Profit)
+plot(Revenue)
+plot(Type_of_logo)
+plot(Number_of_colors)
 ```
 
-### Independence
 
-### Normality
+If we try to plot more variables togheter to see which variables can have the best path in a scatterplot we can see that `Revenue` and `Ranking` have a parabolic shape and therefore it might need some transformation. The scatterplot of the relation between `Revenue` and `Profit` is not very defined since there are some outliers, but oversoall it looks to have a weak and positive relationship. The relationship between `Number of colors` and `Revenue` is very interesting since we do not have any linear pattern, but it looks like that the variablity is larger when there are less colors. We cannot state this without analyze the data more deeply. Overall we do not see any linear pattern.
 
-### Equality Of Variance
+```{r}
+plot(Revenue, Ranking)
+plot(Revenue, Profit)
+plot(Number_of_colors, Revenue)
+```
+
+#### Independence:
+
+We assume that our data come from a indpendent sample where given one variable we do not know anything about another variable. This is true, infact, for all our variables.
+
+#### Normality:
+
+From the histogram of the distribution of our variables of `Ranking`, `Profit`, `Revenue`, `Number Of Colors` and `Type of logo` we can state that all of these variables are not normally distributed because they are skewed right.
+
+```{r}
+library(moments)
+
+hist(Ranking)
+skewness(Ranking)
+kurtosis(Ranking)
+hist(Profit)
+skewness(Profit)
+kurtosis(Profit)
+hist(Revenue)
+skewness(Revenue)
+kurtosis(Revenue)
+hist(Number_of_colors)
+skewness(Number_of_colors)
+kurtosis(Number_of_colors)
+hist(Type_of_logo)
+skewness(Type_of_logo)
+kurtosis(Type_of_logo)
+```
+#### Equality Of Variance:
+
+For assessing we would need to find the residuals for each variable.
+
+#### Multicollinearity & Singularity:
+
+By looking at the covariance matrix we do not have any correlations abot 0.7, which means that we do not have any Multicollinearity. We do not have any correlations between variables that are greater than 1, so we do not have Singularity.
+
+```{r}
+round(cor(cbind(Ranking, Profit, Revenue, Number_of_colors, Type_of_logo, Living_in_logo, Gradient)),3)
+```
+
 
 # Analysis
 
+```{r}
+head(logorev_cleaned)
+summary(logorev_cleaned)
+```
+
+## Decision Tree
+
+A quick and easy decision Tree using `R`.
+
+```{r}
+# Loading the libraries
+library(MASS)
+library(rpart)
+```
+
+```{r}
+mean(Revenue)
+median(Revenue)
+
+logorev_cleaned[,'top_company'] <- ifelse(Revenue >= 6939, 1, 0)
+```
+
+```{r}
+### Making the 
+library(rpart.plot)
+set.seed(1)
+train <- sample(1:nrow(logorev_cleaned), 0.75 * nrow(logorev_cleaned))
+
+logoTree <- rpart(Revenue ~ Type_of_logo + Number_of_colors + Living_in_logo + Gradient, data = logorev_cleaned)
+
+rpart.plot(logoTree, main="Classification Tree")
+
+summary(logoTree)
+```
+
+
+## Decision tree using JUMP
+
+First, we did our full data decision tree analysis using JMP Pro 15. We saw one data that was way up high, and the difference between each child doesn’t seem to be really significant. We were concerned that this data point would extremely skew our data. Therefore, we deleted this data point.
+
+![Alt text](jump1.png)
+
+![Alt text](jump2.png)
+
+Our second decision tree analysis, after throwing out one outlier, looked so much better even though most data points are at the lower end of revenue and few data points scattered across the middle and higher end of revenue. Additionally, the children’s partitions seemed to be more defined.
+
+![Alt text](jump3.png)
+
+![Alt text](jump4.png)
+
+
+
+From both decision tree analysis, we can conclude that it is more likely for a company to have a higher revenue if their type of logo is a combination logo and between 3 and 5 number of colors.
+
+## Multiple regression
+
+#### Multiple regression
+
+```{r}
+multiple_regression = lm(Revenue ~ Type_of_logo + Number_of_colors, data = logorev_cleaned)
+
+summary(multiple_regression)
+```
+
+```{r}
+ggplot(logorev_cleaned, aes(x=Type_of_logo + Number_of_colors, y=Revenue)) + 
+  geom_point()+
+  geom_smooth()
+```
+
+
+```{r}
+plot(residuals(multiple_regression))
+plot(multiple_regression, which = 1)
+plot(multiple_regression, which = 2)
+plot(multiple_regression, which = 3)
+plot(multiple_regression, which = 4)
+```
+
+
+```{r}
+multiple_regression_2 = lm(log(Revenue + min(Revenue)) ~ log(Type_of_logo + 1) + log(Number_of_colors + 1), data = logorev_cleaned)
+
+summary(multiple_regression_2)
+```
+
+
+```{r}
+ggplot(logorev_cleaned, aes(x=log(Type_of_logo + 1) + log(Number_of_colors + 1), y= log(Revenue + min(Revenue)))) + 
+  geom_point()+
+  geom_smooth()
+```
+
+
+```{r}
+plot(residuals(multiple_regression_2))
+plot(multiple_regression_2, which = 1)
+plot(multiple_regression_2, which = 2)
+plot(multiple_regression_2, which = 3)
+plot(multiple_regression_2, which = 4)
+```
+
+#### Multiple regression after deliting outliers and after a Log transformation
+
+
+```{r}
+no_outliers <- logorev_cleaned[- c(3, 2, 18, 51, 54, 12),] # Getting rid of the outlier
+multiple_regression_2 = lm(log(Revenue + min(Revenue)) ~ log(Type_of_logo + 1) + log(Number_of_colors + 1), data = no_outliers)
+
+summary(multiple_regression_2)
+```
+
+
+```{r}
+ggplot(no_outliers, aes(x=log(Type_of_logo + 1) + log(Number_of_colors + 1), y= log(Revenue + min(Revenue)))) + 
+  geom_point()+
+  geom_smooth()
+```
+
+```{r}
+plot(residuals(multiple_regression_2))
+plot(multiple_regression_2, which = 1)
+plot(multiple_regression_2, which = 2)
+plot(multiple_regression_2, which = 3)
+plot(multiple_regression_2, which = 4)
+```
+
+
+## Logistic Regression
+
+Logistic regression is used to describe data and to explain the relationship between one dependent binary variable and one or more nominal, ordinal, interval or ratio-level independent variables. Types of questions that a logistic regression can examine:
+
+```{r}
+# Logisitic Regression
+log_reg = glm(top_company ~ Type_of_logo + Number_of_colors + Gradient + Living_in_logo, data = logorev_cleaned)
+
+summary(log_reg)
+plot(log_reg)
+
+# plot of the logisitic regression
+ggplot(logorev_cleaned, aes(x= Type_of_logo + Number_of_colors + Gradient + Living_in_logo, y=top_company)) + geom_point() + 
+  stat_smooth(method="glm", method.args=list(family="binomial"), se=FALSE)
+```
+
+
+
+```{r}
+# Logisitic Regression
+log_reg = glm(top_company ~ log(Type_of_logo + 1) + log(Number_of_colors + 1) + Gradient + Living_in_logo, data = no_outliers)
+
+summary(log_reg)
+plot(log_reg)
+
+# plot of the logisitic regression
+ggplot(no_outliers, aes(x= Type_of_logo + Number_of_colors + Gradient + Living_in_logo, y=top_company)) + geom_point() + 
+  stat_smooth(method="glm", method.args=list(family="binomial"), se=FALSE)
+```
+
+
+## Neural Network
 
 # Conclusions
