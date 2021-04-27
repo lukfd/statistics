@@ -1,0 +1,370 @@
+---
+title: "Reading the data"
+author: "Luca Comba"
+date: "2/8/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(skimr)
+```
+
+## Dataset files
+
+I have deleted few rows that were explaining the variables and converted the xlxs files into csv.
+
+
+#### 1. Meteorological Data for Fargo
+
+Daily Observation Table for January 1 2000 to January 14 2021
+Flag Definition Line: 
+
+- M - Missing; 
+- E - Estimated; 
+- N/A - Not Available
+
+Variables:
+
+- Station Name
+- Latitude (deg)
+- Longitude (deg)
+- Elevation (ft)
+- Year
+- Month
+- Day
+- Avg Temp
+- Avg Temp Flag
+- Penman PET (mm)
+- Rainfall (mm)
+- Rainfall flag
+
+```{r}
+meteo_fargo <- read.csv("C:/Users/Luca/Desktop/SPRING2021/Statistical Research/CSV Cleaned/Meteorological Data for Fargo_cleaned.csv", encoding="UTF-8")
+
+summary(meteo_fargo)
+skim(meteo_fargo)
+```
+
+We are replacing empty with the Not Available value
+
+```{r}
+meteo_fargo[meteo_fargo==""]<-NA
+```
+
+then we want to see what type of variable we have
+
+```{r}
+glimpse(meteo_fargo)
+```
+
+We can see that the integers variables are *Elevation*, *Year*, *Month* and *Day*.
+
+
+**Univariate Outliers**
+We will use boxplots and z-scores for finding outliers.
+
+- Average Temperature outliers
+```{r}
+# Average Temperature
+zScores_avg_temp_fargo <- (meteo_fargo$Avg.Temp - mean(meteo_fargo$Avg.Temp, na.rm = T)) / sd(meteo_fargo$Avg.Temp, na.rm = T)
+sum(abs(zScores_avg_temp_fargo)> 3.29, na.rm = TRUE)
+```
+We do not have any outliers for the `average temeperature`
+In fact in the boxplot there are no outliers. The histogram shows us that the distribution of `average temperatures` is almost normally distributed.
+```{r}
+hist(meteo_fargo$Avg.Temp)
+boxplot(meteo_fargo$Avg.Temp)
+```
+
+- rainfall outliers
+
+```{r}
+# Rainfall
+zScores_rainfall_fargo <- (meteo_fargo$Rainfall - mean(meteo_fargo$Rainfall, na.rm = T)) / sd(meteo_fargo$Rainfall, na.rm = T)
+sum(abs(zScores_rainfall_fargo)> 3.29, na.rm = TRUE)
+```
+With the zScore we have found that there are 96 outliers. We need to remember that out of 7685 cases we have 2804 `NA` because those data were missing and 125 were estimated.
+
+```{r}
+sum(is.na(meteo_fargo$Rainfall))
+
+sum(meteo_fargo["Rainfall.Flag"]=="E", na.rm = TRUE)
+sum(meteo_fargo["Rainfall.Flag"]=="M", na.rm = TRUE)
+```
+The histogram is highly skewed right.
+
+```{r}
+hist(meteo_fargo$Rainfall)
+boxplot(meteo_fargo$Rainfall)
+```
+
+- Penman PET (in mm)
+```{r}
+# Penman
+zScores_penman_fargo <- (meteo_fargo$Penman.PET - mean(meteo_fargo$Penman.PET, na.rm = T)) / sd(meteo_fargo$Penman.PET, na.rm = T)
+sum(abs(zScores_penman_fargo)> 3.29, na.rm = TRUE)
+```
+For the variable Penman PET we have 7 outliers.
+
+Also the histogram of Penman is skewed right.
+
+```{r}
+hist(meteo_fargo$Penman.PET)
+boxplot(meteo_fargo$Penman.PET)
+```
+
+**Bivariate Outliers**
+We are going to use scatter plots and mahalanobis distance.
+
+- Average Temperature with Rainfall
+```{r}
+#mahaDistance = mahalanobis(meteo_fargo$Avg.Temp, center = c(mean(meteo_fargo$Avg.Temp, na.rm = F), mean(meteo_fargo$Rainfall, na.rm = F)),cov = cov(cbind(meteo_fargo$Avg.Temp, meteo_fargo$Rainfall), use = "complete.obs"))
+
+#mahaDistance
+```
+
+- Rainfall
+
+- Penman.PET
+
+
+
+**Skewness and kurtosis**
+```{r}
+require(moments)
+
+# for average temperature
+skewness(meteo_fargo$Avg.Temp)
+kurtosis(meteo_fargo$Avg.Temp)
+pnorm(q =  (skewness(meteo_fargo$Avg.Temp) - 0) / sqrt(6 / length(meteo_fargo$Avg.Temp)), lower.tail = FALSE)
+pnorm(q =  (kurtosis(meteo_fargo$Avg.Temp) - 0) / sqrt(24 / length(meteo_fargo$Avg.Temp)), lower.tail = FALSE)
+```
+
+```{r}
+# for rainfall
+skewness(meteo_fargo$Rainfall, na.rm = T)
+kurtosis(meteo_fargo$Rainfall, na.rm = T)
+pnorm(q =  (skewness(meteo_fargo$Rainfall, na.rm = T) - 0) / sqrt(6 / length(meteo_fargo$Rainfall)), lower.tail = F)
+pnorm(q =  (kurtosis(meteo_fargo$Rainfall, na.rm = T) - 0) / sqrt(24 / length(meteo_fargo$Rainfall)), lower.tail = F)
+
+```
+
+```{r}
+# for penman.PET
+skewness(meteo_fargo$Penman.PET)
+kurtosis(meteo_fargo$Penman.PET)
+
+pnorm(q =  (skewness(meteo_fargo$Penman.PET) - 0) / sqrt(6 / length(meteo_fargo$Penman.PET)), lower.tail = FALSE)
+pnorm(q =  (kurtosis(meteo_fargo$Penman.PET) - 0) / sqrt(24 / length(meteo_fargo$Penman.PET)), lower.tail = FALSE)
+```
+
+**Bivariate homoscedasticity**
+scatter plots are usually enough
+
+**Bivariate linearity**
+use a qq-plot, it's a bit cleaner than just an outright scatterplot - and be ready to transform anything that isn't linear
+
+**Multicollinearity & Singularity**
+```{r}
+corMat_fargo = cor(cbind(meteo_fargo$Avg.Temp, meteo_fargo$Rainfall, meteo_fargo$Penman.PET), use = "complete.obs")
+corMat_fargo
+eig = eigen(corMat_fargo)
+```
+There appears to be no multicollinearity or singularity because none of the correlations are above 0.9.
+
+```{r}
+eig = eigen(corMat_fargo)
+sqrt(max(eig$values)/eig$values)
+```
+There appears to be no multicollinearity or singularity because none of the condition indices isabove 30
+
+
+#### 2. Meteorological Data for Grand Forks
+Daily Observation Table for January 1 2000 to January 14 2021
+Flag Definition Line: M - Missing; E - Estimated; N/A - Not Available
+
+Variables:
+
+- Station Name
+- Latitude (deg)
+- Longitude (deg)
+- Elevation (ft)
+- Year
+- Month
+- Day
+- Avg Temp
+- Avg Temp Flag
+- Penman PET (mm)
+- Rainfall (mm)
+- Rainfall flag
+
+```{r}
+meteo_grand <- read.csv("C:/Users/Luca/Desktop/SPRING2021/Statistical Research/CSV Cleaned/Meteorological Data for Grand Forks_cleaned.csv", encoding="UTF-8")
+
+summary(meteo_grand)
+
+skim(meteo_grand)
+```
+
+
+#### 3. Snow Depth for Fargo
+
+SnowDepth at -96.8120E and 46.8970N from October 1st 2003 to January 13th 2021
+
+Variables:
+
+- DateTime
+- snow depth in mm
+
+```{r}
+snow_depth_fargo <- read.csv("C:/Users/Luca/Desktop/SPRING2021/Statistical Research/CSV Cleaned/Snow Depth for Fargo_cleaned.csv", encoding="UTF-8")
+
+summary(snow_depth_fargo)
+
+skim(snow_depth_fargo)
+```
+
+
+#### 4. Snow Depth for Grand Forks
+
+SnowDepth at -97.0668E and 47.83630N from October 1st 2003 to January 13th 2021
+
+Variables:
+
+- DateTime
+- snow depth in mm
+
+```{r}
+snow_depth_grand <- read.csv("C:/Users/Luca/Desktop/SPRING2021/Statistical Research/CSV Cleaned/Snow Depth from Grand Forks_cleaned.csv", encoding="UTF-8")
+
+summary(meteo_grand)
+skim(snow_depth_grand)
+```
+
+#### 5. Soil Temperatures
+The data on this page have not been quality controlled. There are outliers and missing data
+
+The soil temperatures are in degrees celsius
+
+Data from 2014-10-02 1200 until 2021-01-15 1100
+
+Variables:
+
+- Station	Time (CST)
+- 5 cm	
+- 10 cm	
+- 20 cm	
+- 30 cm	
+- 40 cm	
+- 50 cm	
+- 60 cm	
+- 80 cm	
+- 100 cm	
+- 125 cm	
+- 150 cm	
+- 175 cm	
+- 200 cm	
+- 225 cm
+
+```{r}
+soil_temp<- read.csv("C:/Users/Luca/Desktop/SPRING2021/Statistical Research/CSV Cleaned/Soil Temperatures for Fargo and Grand Forks_cleaned.csv", encoding="UTF-8")
+
+summary(soil_temp)
+skim(soil_temp)
+```
+
+#### 6. Streamflow for Fargo
+
+ Some of the data that you have obtained from this U.S. Geological Survey database
+ may not have received Director's approval. Any such data values are qualified
+ as provisional and are subject to revision. Provisional data are released on the
+ condition that neither the USGS nor the United States Government may be held liable
+ for any damages resulting from its use.
+
+Additional info: https://help.waterdata.usgs.gov/policies/provisional-data-statement
+
+ File-format description:  https://help.waterdata.usgs.gov/faq/about-tab-delimited-output
+ Automated-retrieval info: https://help.waterdata.usgs.gov/faq/automated-retrievals
+
+ Contact:   gs-w_support_nwisweb@usgs.gov
+ retrieved: 2021-01-15 13:35:27 EST       (caww01)
+
+ Data for the following 1 site(s) are contained in this file
+    USGS 05054000 RED RIVER OF THE NORTH AT FARGO, ND
+ -----------------------------------------------------------------------------------
+
+ Data provided for site 05054000
+            TS   parameter     statistic     Description
+         90936       00060     00003     Discharge, cubic feet per second (Mean)
+
+
+Data-values qualification code:
+A  Approved for publication -- Processing and review completed.
+P  Provisional data subject to revision.
+e  Value has been estimated.
+
+
+Variables:
+- agency_cd
+- site_no	datetime
+- 90936_00060_00003
+- 90936_00060_00003_cd
+
+
+```{r}
+streamflow_fargo<- read.csv("C:/Users/Luca/Desktop/SPRING2021/Statistical Research/CSV Cleaned/Streamflow for Fargo from USGS_cleaned.csv", encoding="UTF-8")
+
+summary(streamflow_fargo)
+skim(streamflow_fargo)
+```
+
+#### 7. Streamflow for Grand Forks
+
+ Some of the data that you have obtained from this U.S. Geological Survey database
+ may not have received Director's approval. Any such data values are qualified
+ as provisional and are subject to revision. Provisional data are released on the
+ condition that neither the USGS nor the United States Government may be held liable
+ for any damages resulting from its use.
+
+Additional info: https://help.waterdata.usgs.gov/policies/provisional-data-statement
+
+ File-format description:  https://help.waterdata.usgs.gov/faq/about-tab-delimited-output
+ Automated-retrieval info: https://help.waterdata.usgs.gov/faq/automated-retrievals
+
+ Contact:   gs-w_support_nwisweb@usgs.gov
+ retrieved: 2021-01-15 13:35:27 EST       (caww01)
+
+ Data for the following 1 site(s) are contained in this file
+    USGS 05054000 RED RIVER OF THE NORTH AT FARGO, ND
+ -----------------------------------------------------------------------------------
+
+ Data provided for site 05054000
+            TS   parameter     statistic     Description
+         90936       00060     00003     Discharge, cubic feet per second (Mean)
+
+
+Data-values qualification code:
+A  Approved for publication -- Processing and review completed.
+P  Provisional data subject to revision.
+e  Value has been estimated.
+
+
+Variables:
+- agency_cd
+- site_no	datetime
+- 90936_00060_00003
+- 90936_00060_00003_cd
+
+```{r}
+streamflow_grand<- read.csv("C:/Users/Luca/Desktop/SPRING2021/Statistical Research/CSV Cleaned/Streamflow for Grand Forks from USGS_cleaned.csv", encoding="UTF-8")
+
+summary(streamflow_grand)
+skim(streamflow_grand)
+```
+
+
+
+

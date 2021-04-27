@@ -1,0 +1,406 @@
+---
+title: "Research visualizations for paper"
+author: "Luca Comba"
+date: "4/19/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Overview
+
+Using R it will be convinent to create graph and visualization for the paper. It is our intent to utilize R packages such as `ggplot2` to visualize data and models to export and include them into the written and presentation of the research paper.
+
+# For the paper
+
+The paper is structured with 5 sections. They all base their content on the dataset and analysis made on the dataset. It is important to follow readability structure of the data and be mindful of colors and labels in order to create easy to understand and read visualizations.
+
+We will start by loading the needed r packages.
+
+```{r, results='hide', warning=FALSE, results='hide',message=FALSE}
+library(tidyverse) # this includes ggplot and dplyr
+library(maps) # to create maps
+library(rgdal) # for reading shape files
+library(sf)
+library(grid) # for making grids
+library(gridExtra) # another package for tables
+library(cowplot) # for making table of plots
+library(RColorBrewer) # for nice color pallet
+```
+
+It will be necessary to load the correct dataset.
+
+```{r, results='hide'}
+# data for Fargo
+fargo <- read.csv("C:/Users/Luca/Desktop/SPRING2021/Statistical Research/Correct Dataset/fargo.csv", encoding="UTF-8")
+# data for Grand
+grand <- read.csv("C:/Users/Luca/Desktop/SPRING2021/Statistical Research/Correct Dataset/grand.csv", encoding="UTF-8")
+```
+
+```{r}
+# reading different river shape coordinates data
+shape_river <- readOGR('C:/Users/Luca/Desktop/SPRING2021/Statistical Research/RRB_Files', 'RedRiver')
+
+shape_basin <- readOGR('C:/Users/Luca/Desktop/SPRING2021/Statistical Research/RRB_Files', 'RedRiverBasin')
+```
+
+## 1. Introduction
+
+For the introduction we would like to show a map of the Red River region and show the two weather station that have been collecting the data.
+
+```{r}
+points_cities <- data.frame (lat = c(46.897, 47.83633),
+                  lon = c(-96.812, -97.066838))
+# ggplot
+map_general <- map_data("state") %>%
+  ggplot() + 
+  geom_polygon(aes(long, lat, group = group), fill = 'gray90', color = 'black') +
+  geom_point(data = points_cities, aes(lon,lat), color = "red") +
+  annotate("text", x = -97.1, y = 47.1, label = "Fargo") +
+  annotate("text", x = -97, y = 48, label = "Grand Forks") +
+  coord_map() + 
+  coord_cartesian(xlim= c(-100, -93), ylim = c(45, 49)) +
+  theme_void()
+map_general
+# saving
+```
+
+With Red River in the map
+
+```{r}
+# ggplot
+map_red_river <- map_data("state") %>%
+  ggplot(aes(long, lat)) + 
+  geom_polygon(aes(group = group),fill = 'gray90', color = 'black') +
+  geom_path(aes(group = group), data = shape_river, color = 'steelblue2') +
+  geom_point(data = points_cities, aes(lon,lat), color = "red") +
+  annotate("text", x = -97.1, y = 47.1, label = "Fargo") +
+  annotate("text", x = -97, y = 48, label = "Grand Forks") +
+  coord_map() + 
+  coord_cartesian(xlim= c(-100, -93), ylim = c(45, 49)) +
+  theme_void()
+map_red_river
+```
+
+A more complete map
+
+```{r}
+# ggplot
+map_red_river <- map_data("state") %>%
+  ggplot(aes(long, lat)) + 
+  geom_polygon(aes(group = group), fill = 'gray90', color = 'black') +
+  geom_polygon(aes(group = group), data = shape_basin, color = 'brown', fill = "burlywood1", alpha = 0.5) +
+  geom_path(aes(group = group), data = shape_river, color = 'steelblue2') +
+  geom_point(data = points_cities, aes(lon,lat), color = "red") +
+  annotate("text", x = -97.1, y = 47.1, label = "Fargo") +
+  annotate("text", x = -97, y = 48, label = "Grand Forks") +
+  coord_map() + 
+  coord_cartesian(xlim= c(-100, -93), ylim = c(45, 49)) +
+  ggtitle("Map of Red River Basin") +
+  xlab("longitude") + ylab("latitude") +
+  theme_minimal()
+map_red_river
+```
+
+
+Source: [https://stackoverflow.com/questions/51333546/how-to-plot-rivers-efficiently/51334108](https://stackoverflow.com/questions/51333546/how-to-plot-rivers-efficiently/51334108)
+
+```{r}
+shapeUFs <- readOGR('C:/Users/Luca/Desktop/SPRING2021/Statistical Research/RRB_Files', 'RedRiverBasin')
+shapeHid <- readOGR('C:/Users/Luca/Desktop/SPRING2021/Statistical Research/RRB_Files', 'RedRiver') 
+
+ggplot(shapeUFs, aes(long, lat, group = group)) +
+  geom_polygon(fill = 'gray90', color = 'black') +
+  geom_path(data = shapeHid, color = 'steelblue2') +
+  coord_map() + theme_void()
+
+```
+
+## 2. Data and methods
+
+A table of the data would be nice.
+
+```{r}
+grid_fargo <- fargo %>%
+  select(date, discharge, ConsecutiveDaysOfLessDischarge, SizeOfDischargeByDay, Spring, Summer) %>% 
+  head(15) %>%
+  tableGrob()
+
+h = grid::convertHeight(sum(grid_fargo$heights), "in", TRUE)
+w = grid::convertWidth(sum(grid_fargo$widths), "in", TRUE)
+
+ggsave("fargo_grid_first15.jpg", grid_fargo, width = w, height = h)
+```
+
+```{r}
+grid_grand <- grand %>%
+  select(date, discharge, ConsecutiveDaysofLessDischarge, SizeOfDischargeByDay, Spring, Summer) %>% 
+  head(15) %>%
+  tableGrob()
+
+h = grid::convertHeight(sum(grid_grand$heights), "in", TRUE)
+w = grid::convertWidth(sum(grid_grand$widths), "in", TRUE)
+
+ggsave("grand_grid_first15.jpg", grid_fargo, width = w, height = h)
+
+```
+
+#### Fargo
+
+Some primamry data to show the distribution
+
+```{r}
+fargo$year <- as.factor(fargo$year)
+
+fargo_discharge_x_year <- fargo %>%
+  ggplot() +
+  geom_line(aes(x=days,y=discharge, group=year, color = year)) +
+  theme_minimal() +
+  scale_color_brewer(palette="Dark2") +
+  ggtitle("Fargo daily discharge by year")
+fargo_discharge_x_year
+```
+
+
+```{r}
+fargo_discharge_by_year <- fargo %>%
+  ggplot() +
+  geom_line(aes(x=days,y=discharge)) +
+  scale_color_brewer(palette="Dark2") +
+  facet_grid(year~.) +
+  theme_minimal() +
+  ggtitle("Fargo daily discharge by year")
+fargo_discharge_by_year
+```
+
+Other variables
+
+```{r}
+fargo_temp <- fargo %>%
+  ggplot() + 
+  geom_line(aes(x=days,y=avg.temp, group=year, color = year)) +
+  scale_color_brewer(palette="Dark2") +
+  theme_minimal() +
+  ggtitle("Fargo daily average temperature")
+
+fargo_snow <- fargo %>%
+  ggplot() + 
+  geom_line(aes(x=days,y=snow.depth, group=year, color = year)) +
+  scale_color_brewer(palette="Dark2") +
+  theme_minimal() +
+  ggtitle("Fargo daily average temperature")
+
+fargo_topsoil <- fargo %>%
+  ggplot() + 
+  geom_line(aes(x=days,y=top.soil.temp, group=year, color = year)) +
+  scale_color_brewer(palette="Dark2") +
+  theme_minimal() +
+  ggtitle("Fargo daily average top soil temperature")
+
+fargo_pen <- fargo %>%
+  ggplot() + 
+  geom_line(aes(x=days,y=penman.pet, group=year, color = year)) +
+  scale_color_brewer(palette="Dark2") +
+  theme_minimal() +
+  ggtitle("Fargo daily potential evapotranspiration")
+
+#multiplot(fargo_discharge_x_year, fargo_temp, fargo_snow, fargo_topsoil, cols=2)
+plot_grid(fargo_discharge_x_year, fargo_temp, fargo_snow, fargo_topsoil, labels = c('A', 'B', 'C', 'D'), label_size = 12)
+```
+
+#### Grand Forks
+
+```{r}
+grand$year <- as.factor(grand$year)
+
+grand_discharge_x_year <- grand %>%
+  ggplot() +
+  geom_line(aes(x=days,y=discharge, group=year, color = year)) +
+  theme_minimal() +
+  scale_color_brewer(palette="Dark2") +
+  ggtitle("Grand daily discharge by year")
+grand_discharge_x_year
+```
+
+```{r}
+grand_discharge_by_year <- grand %>%
+  ggplot() +
+  geom_line(aes(x=days,y=discharge)) +
+  facet_grid(year~.) +
+  theme_minimal() +
+  scale_color_brewer(palette="Dark2") +
+  ggtitle("Grand daily discharge by year")
+grand_discharge_by_year
+```
+
+```{r}
+grand_temp <- grand %>%
+  ggplot() + 
+  geom_line(aes(x=days,y=avg.temp, group=year, color = year)) +
+  scale_color_brewer(palette="Dark2") +
+  theme_minimal() +
+  ggtitle("Grand daily average temperature")
+
+grand_snow <- grand %>%
+  ggplot() + 
+  geom_line(aes(x=days,y=snow.depth, group=year, color = year)) +
+  scale_color_brewer(palette="Dark2") +
+  theme_minimal() +
+  ggtitle("Grand daily average temperature")
+
+grand_topsoil <- grand %>%
+  ggplot() + 
+  geom_line(aes(x=days,y=top.soil.temp, group=year, color = year)) +
+  scale_color_brewer(palette="Dark2") +
+  theme_minimal() +
+  ggtitle("Grand daily average top soil temperature")
+
+grand_pen <- grand %>%
+  ggplot() + 
+  geom_line(aes(x=days,y=penman.pet, group=year, color = year)) +
+  scale_color_brewer(palette="Dark2") +
+  theme_minimal() +
+  ggtitle("Grand daily potential evapotranspiration")
+
+#multiplot(fargo_discharge_x_year, fargo_temp, fargo_snow, fargo_topsoil, cols=2)
+plot_grid(grand_discharge_x_year, grand_temp, grand_snow, grand_topsoil, labels = c('A', 'B', 'C', 'D'), label_size = 12)
+```
+
+## 3. Results
+
+For sure we would need to show a graph of the time series and highlight the differences in the spring and summer periods.
+
+First we want to have a new variable called season to flag 1 if Spring is 1, 2 if Summer is 1. 0 otherwise.
+
+```{r}
+fargo <- fargo %>% 
+  mutate(season = if_else(Spring == 1, 1, if_else(Summer == 1, 2, 0)))
+
+grand <- grand %>% 
+  mutate(season = if_else(Spring == 1, 1, if_else(Summer == 1, 2, 0)))
+
+fargo$season <- as.factor(fargo$season)
+grand$season <- as.factor(grand$season)
+```
+
+
+#### Fargo Analysis
+
+Now we can more easily highlight the spring and summer
+
+```{r}
+
+fargo_discharge_rec <- fargo %>% 
+  filter(year == 2019) %>%
+  ggplot(aes(x=days,y=discharge, color = season)) +
+  geom_path(aes(group = 1)) +
+  geom_point(data = filter(fargo, RecessionDay == 1 & year == 2019 & 
+                             season != 0 & 
+                             ConsecutiveDaysOfLessDischarge >= 5), 
+             aes(x=days,y=discharge,color = season)) +
+  ggtitle("2019 discharge", 
+          subtitle = "shows different season and recessions") +
+  scale_color_manual(name="Season",
+                       labels=c("Neither","Spring","Summer"),
+                       values=c("chocolate1","cadetblue3","navyblue")) +
+  theme_minimal()
+
+fargo_discharge_rec
+```
+
+
+```{r}
+
+fargo %>% 
+  ggplot(aes(x=days,y=discharge, color = season)) +
+  geom_path(group = 1) +
+  geom_point(data = filter(fargo, RecessionDay == 1 & 
+                             season != 0 & 
+                             ConsecutiveDaysOfLessDischarge >= 5), 
+             aes(x=days,y=discharge,color = season)) +
+  scale_color_manual(name="Season",
+                       labels=c("Neither","Spring","Summer"),
+                       values=c("chocolate1","cadetblue3","navyblue")) +
+  facet_grid(year~.) +
+  theme_minimal()
+
+```
+
+Another necessary graph would be to show the results of the 
+
+```{r}
+fargo %>%
+  filter(year == 2019) %>%
+  ggplot() +
+  geom_histogram(aes(x=discharge, fill = season), binwidth = 1000, position = "identity", alpha = 0.8) +
+  scale_fill_brewer(palette="Dark2") +
+  theme_minimal() +
+  ggtitle("2019 discharge", 
+          subtitle = "shows different season and recessions")
+
+```
+
+Maybe a histogram resulting of bootstrapping
+
+#### Fargo Analysis
+
+Now we can more easily highlight the spring and summer
+
+```{r}
+
+grand_discharge_rec <- grand %>% 
+  filter(year == 2019) %>%
+  ggplot(aes(x=days,y=discharge, color = season)) +
+  geom_path(aes(group = 1)) +
+  geom_point(data = filter(grand, RecessionDay == 1 & year == 2019 & 
+                             season != 0 & 
+                             ConsecutiveDaysOfLessDischarge >= 5), 
+             aes(x=days,y=discharge,color = season)) +
+  ggtitle("2019 discharge", 
+          subtitle = "shows different season and recessions") +
+  scale_color_manual(name="Season",
+                       labels=c("Neither","Spring","Summer"),
+                       values=c("chocolate1","cadetblue3","navyblue")) +
+  theme_minimal()
+
+fargo_discharge_rec
+```
+
+
+```{r}
+
+grand %>% 
+  ggplot(aes(x=days,y=discharge, color = season)) +
+  geom_path(group = 1) +
+  geom_point(data = filter(grand, RecessionDay == 1 & 
+                             season != 0 & 
+                             ConsecutiveDaysOfLessDischarge >= 5), 
+             aes(x=days,y=discharge,color = season)) +
+  scale_color_manual(name="Season",
+                       labels=c("Neither","Spring","Summer"),
+                       values=c("chocolate1","cadetblue3","navyblue")) +
+  facet_grid(year~.) +
+  theme_minimal()
+
+```
+
+Another necessary graph would be to show the results of the 
+
+```{r}
+grand %>%
+  filter(year == 2019) %>%
+  ggplot() +
+  geom_histogram(aes(x=discharge, fill = season), binwidth = 1000, position = "identity", alpha = 0.8) +
+  theme_minimal() +
+  ggtitle("2019 discharge", 
+          subtitle = "shows different season and recessions")
+
+```
+
+
+
+## 4. Discussion + 5. Conclusion
+
+I don't think there would be the need to show any visualizations for these two sections of the paper.

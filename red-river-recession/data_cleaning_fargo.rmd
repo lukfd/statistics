@@ -1,0 +1,281 @@
+---
+title: "data_cleaning Fargo"
+author: "Luca Comba"
+date: "2/10/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(skimr)
+```
+
+Daily Observation Table for January 1 2000 to January 14 2021
+Flag Definition Line: 
+
+- M - Missing; 
+- E - Estimated; 
+- N/A - Not Available
+
+Variables:
+
+- Station Name
+- Latitude (deg)
+- Longitude (deg)
+- Elevation (ft)
+- Year
+- Month
+- Day
+- Avg Temp
+- Avg Temp Flag
+- Penman PET (mm) [stands for potential evapotranspiration and is defined as the amount of evaporation + transpiration that would occur if a sufficient water source were available.]
+- Rainfall (mm)
+- Rainfall flag
+
+```{r}
+meteo_fargo <- read.csv("C:/Users/Luca/Desktop/SPRING2021/Statistical Research/CSV Cleaned/Meteorological Data for Fargo_cleaned.csv", encoding="UTF-8")
+
+summary(meteo_fargo)
+skim(meteo_fargo)
+```
+
+
+We are replacing empty with the Not Available value
+
+```{r}
+meteo_fargo[meteo_fargo==""]<-NA
+
+# check how many NA each variable has
+for (i in 1:13) {
+  print(c(colnames(meteo_fargo[i]), sum(is.na(meteo_fargo[,i]))))
+}
+```
+
+then we want to see what type of variable we have
+
+```{r}
+glimpse(meteo_fargo)
+```
+
+We can see that the integers variables are *Elevation*, *Year*, *Month* and *Day*.
+
+
+**Univariate Outliers**
+We will use boxplots and z-scores for finding outliers.
+
+- Average Temperature outliers
+```{r}
+# Average Temperature
+zScores_avg_temp_fargo <- (meteo_fargo$Avg.Temp - mean(meteo_fargo$Avg.Temp, na.rm = T)) / sd(meteo_fargo$Avg.Temp, na.rm = T)
+sum(abs(zScores_avg_temp_fargo)> 3.29, na.rm = TRUE)
+```
+We do not have any outliers for the `average temeperature`
+In fact in the boxplot there are no outliers. The histogram shows us that the distribution of `average temperatures` is almost normally distributed.
+```{r}
+hist(meteo_fargo$Avg.Temp)
+boxplot(meteo_fargo$Avg.Temp)
+```
+
+some temperatures have been estimated
+
+- rainfall outliers
+
+```{r}
+# Rainfall
+zScores_rainfall_fargo <- (meteo_fargo$Rainfall - mean(meteo_fargo$Rainfall, na.rm = T)) / sd(meteo_fargo$Rainfall, na.rm = T)
+sum(abs(zScores_rainfall_fargo)> 3.29, na.rm = TRUE)
+```
+With the zScore we have found that there are 96 outliers. We need to remember that out of 7685 cases we have 2804 `NA` because those data were missing and 125 were estimated.
+
+```{r}
+sum(is.na(meteo_fargo$Rainfall))
+
+sum(meteo_fargo["Rainfall.Flag"]=="E", na.rm = TRUE)
+sum(meteo_fargo["Rainfall.Flag"]=="M", na.rm = TRUE)
+```
+The histogram is highly skewed right.
+
+```{r}
+hist(meteo_fargo$Rainfall)
+boxplot(meteo_fargo$Rainfall)
+```
+
+- Penman PET (in mm)
+```{r}
+# Penman
+zScores_penman_fargo <- (meteo_fargo$Penman.PET - mean(meteo_fargo$Penman.PET, na.rm = T)) / sd(meteo_fargo$Penman.PET, na.rm = T)
+sum(abs(zScores_penman_fargo)> 3.29, na.rm = TRUE)
+```
+For the variable Penman PET we have 7 outliers.
+
+Also the histogram of Penman is skewed right.
+
+```{r}
+hist(meteo_fargo$Penman.PET)
+boxplot(meteo_fargo$Penman.PET)
+```
+
+**Bivariate Outliers**
+We are going to use scatter plots and mahalanobis distance.
+
+- Average Temperature with Rainfall
+```{r}
+mahaDistance = mahalanobis(cbind(meteo_fargo$Avg.Temp, meteo_fargo$Rainfall), center = c(mean(meteo_fargo$Avg.Temp, na.rm = T), mean(meteo_fargo$Rainfall, na.rm = T)),cov = cov(cbind(meteo_fargo$Avg.Temp, meteo_fargo$Rainfall), use = "complete.obs"))
+
+#mahaDistance
+sum(pchisq(q = mahaDistance, df = 1, lower.tail = FALSE) >= 0.05, na.rm = T)
+
+leverage = mahaDistance / (nrow(meteo_fargo) -1) + 1 / nrow(meteo_fargo)
+
+sum(leverage > mean(leverage)*3, na.rm = T)
+```
+- Average Temperature with Penman.PET
+```{r}
+mahaDistance = mahalanobis(cbind(meteo_fargo$Avg.Temp, meteo_fargo$Penman.PET), center = c(mean(meteo_fargo$Avg.Temp, na.rm = T), mean(meteo_fargo$Penman.PET, na.rm = T)),cov = cov(cbind(meteo_fargo$Avg.Temp, meteo_fargo$Penman.PET), use = "complete.obs"))
+
+#mahaDistance
+sum(pchisq(q = mahaDistance, df = 1, lower.tail = FALSE) >= 0.05, na.rm = T)
+
+leverage = mahaDistance / (nrow(meteo_fargo) -1) + 1 / nrow(meteo_fargo)
+
+sum(leverage > mean(leverage)*3, na.rm = T)
+```
+
+
+- Rainfall with Penman.PET
+```{r}
+mahaDistance = mahalanobis(cbind(meteo_fargo$Rainfall, meteo_fargo$Penman.PET), center = c(mean(meteo_fargo$Rainfall, na.rm = T), mean(meteo_fargo$Penman.PET, na.rm = T)),cov = cov(cbind(meteo_fargo$Rainfall, meteo_fargo$Penman.PET), use = "complete.obs"))
+
+#mahaDistance
+sum(pchisq(q = mahaDistance, df = 1, lower.tail = FALSE) >= 0.05, na.rm = T)
+
+leverage = mahaDistance / (nrow(meteo_fargo) -1) + 1 / nrow(meteo_fargo)
+
+sum(leverage > mean(leverage)*3, na.rm = T)
+```
+
+- Rainfall with Penman.PET
+```{r}
+mahaDistance = mahalanobis(cbind(meteo_fargo$Rainfall, meteo_fargo$Penman.PET), center = c(mean(meteo_fargo$Rainfall, na.rm = T), mean(meteo_fargo$Penman.PET, na.rm = T)),cov = cov(cbind(meteo_fargo$Rainfall, meteo_fargo$Penman.PET), use = "complete.obs"))
+
+#mahaDistance
+sum(pchisq(q = mahaDistance, df = 1, lower.tail = FALSE) >= 0.05, na.rm = T)
+
+leverage = mahaDistance / (nrow(meteo_fargo) -1) + 1 / nrow(meteo_fargo)
+
+sum(leverage > mean(leverage)*3, na.rm = T)
+```
+
+- Rainfall with Penman.PET and Temperature
+```{r}
+mahaDistance = mahalanobis(cbind(meteo_fargo$Rainfall, meteo_fargo$Penman.PET, meteo_fargo$Avg.Temp), center = c(mean(meteo_fargo$Rainfall, na.rm = T), mean(meteo_fargo$Penman.PET, na.rm = T), mean(meteo_fargo$Avg.Temp, na.rm = T)),cov = cov(cbind(meteo_fargo$Rainfall, meteo_fargo$Penman.PET, meteo_fargo$Avg.Temp), use = "complete.obs"))
+
+#mahaDistance
+sum(pchisq(q = mahaDistance, df = 2, lower.tail = FALSE) >= 0.05, na.rm = T)
+
+leverage = mahaDistance / (nrow(meteo_fargo) -1) + 1 / nrow(meteo_fargo)
+
+sum(leverage > mean(leverage)*3, na.rm = T)
+```
+
+
+- Every variable for finding bivariate outliers
+```{r}
+n = ncol(meteo_fargo)
+
+#for(j in 1:(n-1)){
+#    for(i in 1:(n-j)){
+    
+      # print name of variable
+      #print(c(colnames(meteo_fargo[i]), colnames(meteo_fargo[j])))
+      
+      
+      # Calculate mahaDistance
+      #mahaDistance = mahalanobis(cbind(meteo_fargo[,i], meteo_fargo[,j]), center = c(mean(meteo_fargo[,i], na.rm = T), mean(meteo_fargo[,j], na.rm = T)),cov = cov(cbind(meteo_fargo[,i], meteo_fargo[,j]), use = "pairwise.complete.obs"))
+    
+      #sum(pchisq(q = mahaDistance, df = 1, lower.tail = FALSE) >= 0.05, na.rm = T)
+      
+      
+      
+      # Calculate leverage
+      #leverage = mahaDistance / (nrow(meteo_fargo) -1) + 1 / nrow(meteo_fargo)
+      
+      #sum(leverage > mean(leverage)*3, na.rm = T)
+  #}
+#}
+
+#for (i in 1:12) {
+  #for (j in (i+1):13) {
+    #print(c(i,j))
+    
+    #mahalanobis(cbind(meteo_fargo[,i], meteo_fargo[,j]), center = c(mean(meteo_fargo[,i], na.rm = T), mean(meteo_fargo[,j], na.rm = T)),cov = cov(cbind(meteo_fargo[,i], meteo_fargo[,j]), use = "pairwise.complete.obs"))
+    
+  #}
+#}
+
+
+
+```
+
+
+**Skewness and kurtosis**
+```{r}
+require(moments)
+
+# for average temperature
+skewness(meteo_fargo$Avg.Temp)
+kurtosis(meteo_fargo$Avg.Temp)
+pnorm(q =  (skewness(meteo_fargo$Avg.Temp) - 0) / sqrt(6 / length(meteo_fargo$Avg.Temp)), lower.tail = FALSE)
+pnorm(q =  (kurtosis(meteo_fargo$Avg.Temp) - 0) / sqrt(24 / length(meteo_fargo$Avg.Temp)), lower.tail = FALSE)
+```
+
+```{r}
+# for rainfall
+skewness(meteo_fargo$Rainfall, na.rm = T)
+kurtosis(meteo_fargo$Rainfall, na.rm = T)
+pnorm(q =  (skewness(meteo_fargo$Rainfall, na.rm = T) - 0) / sqrt(6 / length(meteo_fargo$Rainfall)), lower.tail = F)
+pnorm(q =  (kurtosis(meteo_fargo$Rainfall, na.rm = T) - 0) / sqrt(24 / length(meteo_fargo$Rainfall)), lower.tail = F)
+
+```
+
+```{r}
+# for penman.PET
+skewness(meteo_fargo$Penman.PET)
+kurtosis(meteo_fargo$Penman.PET)
+
+pnorm(q =  (skewness(meteo_fargo$Penman.PET) - 0) / sqrt(6 / length(meteo_fargo$Penman.PET)), lower.tail = FALSE)
+pnorm(q =  (kurtosis(meteo_fargo$Penman.PET) - 0) / sqrt(24 / length(meteo_fargo$Penman.PET)), lower.tail = FALSE)
+```
+
+**Bivariate homoscedasticity**
+scatter plots are usually enough
+
+```{r}
+pairs(meteo_fargo[,c(8,10,12)])
+```
+
+**Bivariate linearity**
+use a qq-plot, it's a bit cleaner than just an outright scatterplot - and be ready to transform anything that isn't linear
+```{r}
+qqplot(meteo_fargo$Avg.Temp, meteo_fargo$Rainfall)
+qqplot(meteo_fargo$Avg.Temp, meteo_fargo$Penman.PET)
+qqplot(meteo_fargo$Rainfall, meteo_fargo$Penman.PET)
+```
+
+**Multicollinearity & Singularity**
+```{r}
+corMat_fargo = cor(cbind(meteo_fargo$Avg.Temp, meteo_fargo$Rainfall, meteo_fargo$Penman.PET), use = "complete.obs")
+corMat_fargo
+eig = eigen(corMat_fargo)
+```
+There appears to be no multicollinearity or singularity because none of the correlations are above 0.9.
+
+```{r}
+eig = eigen(corMat_fargo)
+sqrt(max(eig$values)/eig$values)
+```
+There appears to be no multicollinearity or singularity because none of the condition indices isabove 30
+
+

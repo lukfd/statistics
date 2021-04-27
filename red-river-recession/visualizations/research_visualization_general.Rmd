@@ -1,0 +1,118 @@
+---
+title: "Research visualizations for paper"
+author: "Luca Comba"
+date: "4/19/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Overview
+
+Using R it will be convinent to create graph and visualization for the paper. It is our intent to utilize R packages such as `ggplot2` to visualize data and models to export and include them into the written and presentation of the research paper.
+
+# For the paper
+
+The paper is structured with 5 sections. They all base their content on the dataset and analysis made on the dataset. It is important to follow readability structure of the data and be mindful of colors and labels in order to create easy to understand and read visualizations.
+
+We will start by loading the needed r packages.
+
+```{r, results='hide', warning=FALSE, results='hide',message=FALSE}
+library(tidyverse) # this includes ggplot and dplyr
+library(maps) # to create maps
+library(rgdal) # for reading shape files
+library(sf)
+library(grid) # for making grids
+library(gridExtra) # another package for tables
+library(cowplot) # for making table of plots
+library(RColorBrewer) # for nice color pallet
+```
+
+It will be necessary to load the correct dataset.
+
+```{r, results='hide'}
+# data for Fargo
+fargo <- read.csv("C:/Users/Luca/Desktop/SPRING2021/Statistical Research/Correct Dataset/fargo_corrected_discharge.csv", encoding="UTF-8")
+# data for Grand
+grand <- read.csv("C:/Users/Luca/Desktop/SPRING2021/Statistical Research/Correct Dataset/grand_corrected_discharge.csv", encoding="UTF-8")
+```
+
+```{r}
+# reading different river shape coordinates data
+shape_river <- readOGR('C:/Users/Luca/Desktop/SPRING2021/Statistical Research/RRB_Files', 'RedRiver')
+
+shape_basin <- readOGR('C:/Users/Luca/Desktop/SPRING2021/Statistical Research/RRB_Files', 'RedRiverBasin')
+```
+
+## 1. Introduction
+
+For the introduction we would like to show a map of the Red River region and show the two weather station that have been collecting the data.
+
+```{r}
+points_cities <- data.frame (lat = c(46.897, 47.83633),
+                  lon = c(-96.812, -97.066838))
+# ggplot
+map_general <- map_data("state") %>%
+  ggplot() + 
+  geom_polygon(aes(long, lat, group = group), fill = 'gray90', color = 'black') +
+  geom_point(data = points_cities, aes(lon,lat), color = "red") +
+  annotate("text", x = -97.1, y = 47.1, label = "Fargo") +
+  annotate("text", x = -97, y = 48, label = "Grand Forks") +
+  coord_map() + 
+  coord_cartesian(xlim= c(-100, -93), ylim = c(45, 49)) +
+  theme_void()
+map_general
+# saving
+```
+
+With Red River in the map
+
+```{r}
+# ggplot
+map_red_river <- map_data("state") %>%
+  ggplot(aes(long, lat)) + 
+  geom_polygon(aes(group = group),fill = 'gray90', color = 'black') +
+  geom_path(aes(group = group), data = shape_river, color = 'steelblue2') +
+  geom_point(data = points_cities, aes(lon,lat), color = "red") +
+  annotate("text", x = -97.1, y = 47.1, label = "Fargo") +
+  annotate("text", x = -97, y = 48, label = "Grand Forks") +
+  coord_map() + 
+  coord_cartesian(xlim= c(-100, -93), ylim = c(45, 49)) +
+  theme_void()
+map_red_river
+```
+
+A more complete map
+
+```{r}
+# ggplot
+map_red_river <- map_data("state") %>%
+  ggplot(aes(long, lat)) + 
+  geom_polygon(aes(group = group), fill = 'gray90', color = 'black') +
+  geom_polygon(aes(group = group), data = shape_basin, color = 'brown', fill = "burlywood1", alpha = 0.5) +
+  geom_path(aes(group = group), data = shape_river, color = 'steelblue2') +
+  geom_point(data = points_cities, aes(lon,lat), color = "red") +
+  annotate("text", x = -97.1, y = 47.1, label = "Fargo") +
+  annotate("text", x = -97, y = 48, label = "Grand Forks") +
+  coord_map() + 
+  coord_cartesian(xlim= c(-100, -93), ylim = c(45, 49)) +
+  ggtitle("Map of Red River Basin", subtitle = "") +
+  xlab("longitude") + ylab("latitude") +
+  theme_minimal()
+map_red_river
+```
+
+
+Source: [https://stackoverflow.com/questions/51333546/how-to-plot-rivers-efficiently/51334108](https://stackoverflow.com/questions/51333546/how-to-plot-rivers-efficiently/51334108)
+
+```{r}
+shapeUFs <- readOGR('C:/Users/Luca/Desktop/SPRING2021/Statistical Research/RRB_Files', 'RedRiverBasin')
+shapeHid <- readOGR('C:/Users/Luca/Desktop/SPRING2021/Statistical Research/RRB_Files', 'RedRiver') 
+
+ggplot(shapeUFs, aes(long, lat, group = group)) +
+  geom_polygon(fill = 'gray90', color = 'black') +
+  geom_path(data = shapeHid, color = 'steelblue2') +
+  coord_map() + theme_void()
+```

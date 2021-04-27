@@ -1,0 +1,147 @@
+---
+output:
+  html_document: default
+  pdf_document: default
+  word_document: default
+---
+```{r}
+library(boot)
+library(dplyr)
+
+JustGrandRecessions <- filter(CompleteGrandWithRecession, RecessionDay == 1)
+
+GrandSpringRecessions <- filter(JustGrandRecessions, Spring == 1)
+GrandSummerRecessions <- filter(JustGrandRecessions, Summer == 1)
+
+GrandSpringRecessionsHighRF <- filter(GrandSpringRecessions, HighRainfall == 1)
+GrandSummerRecessionsHighRF <- filter(GrandSummerRecessions, HighRainfall == 1)
+GrandSpringRecessionsLowRF <- filter(GrandSpringRecessions, HighRainfall == 0)
+GrandSummerRecessionsLowRF <- filter(GrandSummerRecessions, HighRainfall == 0)
+
+GrandSpringRecessionsHighSoilTemp <- filter(GrandSpringRecessions, HighSoilTemp== 1)
+GrandSummerRecessionsHighSoilTemp <- filter(GrandSummerRecessions, HighSoilTemp == 1)
+GrandSpringRecessionsLowSoilTemp <- filter(GrandSpringRecessions, HighSoilTemp == 0)
+GrandSummerRecessionsLowSoilTemp <- filter(GrandSummerRecessions, HighSoilTemp == 0)
+
+GrandSpringRecessionsHighTemp <- filter(GrandSpringRecessions, HighTemp== 1)
+GrandSummerRecessionsHighTemp <- filter(GrandSummerRecessions, HighTemp == 1)
+GrandSpringRecessionsLowTemp <- filter(GrandSpringRecessions, HighTemp == 0)
+GrandSummerRecessionsLowTemp <- filter(GrandSummerRecessions, HighTemp == 0)
+
+GrandSpringRecessionsHighSF <- filter(GrandSpringRecessions, HighSnowFallWinterPrior== 1)
+GrandSummerRecessionsHighSF <- filter(GrandSummerRecessions, HighSnowFallWinterPrior == 1)
+GrandSpringRecessionsLowSF <- filter(GrandSpringRecessions, HighSnowFallWinterPrior == 0)
+GrandSummerRecessionsLowSF <- filter(GrandSummerRecessions, HighSnowFallWinterPrior == 0)
+
+set.seed(4444)  # for reproducibility
+data(GrandSpringRecessions)
+x <- nrow(GrandSpringRecessions)
+y <- 1000
+bootGSpr <- GrandSpringRecessions[sample(x,y,replace = TRUE),]
+
+set.seed(4444)  # for reproducibility
+data(GrandSummerRecessions)
+x <- nrow(GrandSummerRecessions)
+y <- 1000
+bootGSum <- GrandSummerRecessions[sample(x,y,replace = TRUE),]
+
+set.seed(4444)  # for reproducibility
+data(GrandSpringRecessionsHighRF)
+x <- nrow(GrandSpringRecessionsHighRF)
+y <- 1000
+bootGSprHRF <- GrandSpringRecessionsHighRF[sample(x,y,replace = TRUE),]
+
+set.seed(4444)  # for reproducibility
+data(GrandSpringRecessionsLowRF)
+x <- nrow(GrandSpringRecessionsLowRF)
+y <- 1000
+bootGSprLRF <- GrandSpringRecessionsLowRF[sample(x,y,replace = TRUE),]
+
+set.seed(4444)  # for reproducibility
+data(GrandSpringRecessionsLowRF)
+x <- nrow(GrandSpringRecessionsLowRF)
+y <- 1000
+bootGSprLRF <- GrandSpringRecessionsLowRF[sample(x,y,replace = TRUE),]
+
+set.seed(4444)  # for reproducibility
+data(GrandSummerRecessionsLowRF)
+x <- nrow(GrandSummerRecessionsLowRF)
+y <- 1000
+bootGSumLRF <- GrandSummerRecessionsLowRF[sample(x,y,replace = TRUE),]
+
+set.seed(4444)  # for reproducibility
+data(GrandSpringRecessionsHighSoilTemp)
+x <- nrow(GrandSpringRecessionsHighSoilTemp)
+y <- 1000
+bootGSprHST <- GrandSpringRecessionsHighSoilTemp[sample(x,y,replace = TRUE),]
+
+set.seed(4444)  # for reproducibility
+data(GrandSpringRecessionsLowSoilTemp)
+x <- nrow(GrandSpringRecessionsLowSoilTemp)
+y <- 1000
+bootGSprLST <- GrandSpringRecessionsLowSoilTemp[sample(x,y,replace = TRUE),]
+
+set.seed(4444)  # for reproducibility
+data(GrandSummerRecessionsHighSoilTemp)
+x <- nrow(GrandSummerRecessionsHighSoilTemp)
+y <- 1000
+bootGSumHST <- GrandSummerRecessionsHighSoilTemp[sample(x,y,replace = TRUE),]
+
+set.seed(4444)  # for reproducibility
+data(GrandSummerRecessionsLowSoilTemp)
+x <- nrow(GrandSummerRecessionsLowSoilTemp)
+y <- 1000
+bootGSumLST <- GrandSummerRecessionsLowSoilTemp[sample(x,y,replace = TRUE),]
+
+set.seed(4444)  # for reproducibility
+data(GrandSpringRecessionsHighTemp)
+x <- nrow(GrandSpringRecessionsHighTemp)
+y <- 1000
+bootGSprHT <- GrandSpringRecessionsHighTemp[sample(x,y,replace = TRUE),]
+
+set.seed(4444)  # for reproducibility
+data(GrandSpringRecessionsLowTemp)
+x <- nrow(GrandSpringRecessionsLowTemp)
+y <- 1000
+bootGSprLT <- GrandSpringRecessionsLowTemp[sample(x,y,replace = TRUE),]
+
+set.seed(4444)  # for reproducibility
+data(GrandSummerRecessionsHighTemp)
+x <- nrow(GrandSummerRecessionsHighTemp)
+y <- 1000
+bootGSumHT <- GrandSummerRecessionsHighTemp[sample(x,y,replace = TRUE),]
+
+set.seed(4444)  # for reproducibility
+data(GrandSummerRecessionsLowTemp)
+x <- nrow(GrandSummerRecessionsLowTemp)
+y <- 1000
+bootGSumLT <- GrandSummerRecessionsLowTemp[sample(x,y,replace = TRUE),]
+
+set.seed(4444)  # for reproducibility
+data(GrandSpringRecessionsHighSF)
+x <- nrow(GrandSpringRecessionsHighSF)
+y <- 1000
+bootGSprHSF <- GrandSpringRecessionsHighSF[sample(x,y,replace = TRUE),]
+
+set.seed(4444)  # for reproducibility
+data(GrandSpringRecessionsLowSF)
+x <- nrow(GrandSpringRecessionsLowSF)
+y <- 1000
+bootGSprLSF <- GrandSpringRecessionsLowSF[sample(x,y,replace = TRUE),]
+
+set.seed(4444)  # for reproducibility
+data(GrandSummerRecessionsHighSF)
+x <- nrow(GrandSummerRecessionsHighSF)
+y <- 1000
+bootGSumHSF <- GrandSummerRecessionsHighSF[sample(x,y,replace = TRUE),]
+
+set.seed(4444)  # for reproducibility
+data(GrandSummerRecessionsLowSF)
+x <- nrow(GrandSummerRecessionsLowSF)
+y <- 1000
+bootGSumLSF <- GrandSummerRecessionsLowSF[sample(x,y,replace = TRUE),]
+
+
+
+```
+

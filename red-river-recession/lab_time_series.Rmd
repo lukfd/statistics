@@ -1,0 +1,266 @@
+---
+title: "Time Series Lab"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, eval = FALSE)
+```
+
+```{r}
+library(tidyverse)
+library(Stat2Data)
+library(skimr)
+library(forecast)
+library(lmtest)
+```
+
+For this lab, we will follow some of the examples in section 12.4, using the **ResidualOil** data.
+
+```{r}
+data("ResidualOil")
+```
+
+You can `?` ResidualOil to learn more about it. 
+```{r, eval=FALSE}
+?ResidualOil
+```
+
+## Linear model
+The simplest way we could model this data is just with a simple linear model using time as a predictor
+
+```{r}
+ggplot(ResidualOil, aes(x = t, y = Oil)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE)
+m1 <- lm(Oil ~ t, data = ResidualOil)
+summary(m1)
+```
+
+This actually explains a fair amount of the variability. But, let's look at the residual plots
+
+```{r}
+plot(m1, which = 1)
+plot(m1, which = 2)
+```
+
+There seems to be some nonlinearity, so maybe we need to do a transformation. Handily, the logOil variable is already in the data!
+
+```{r}
+m2 <- lm(LogOil ~ t, data = ResidualOil)
+summary(m2)
+plot(m2, which = 1)
+```
+
+This model explains more of the variability, and the residuals look a lot more linear. But, there are still some clear trends in the residuals. So, we'd like to model in a more complicated way. 
+
+## Seasonal means model
+
+One way to improve this model would be to use seasonal means. This will allow for a different predicted value for each "season." In this case, we're using Qtr as our "season." 
+
+```{r}
+m3 <- lm(LogOil ~ t + as_factor(Qtr), data = ResidualOil)
+summary(m3)
+```
+
+We need to wrap `Qtr` in `as_factor()` so R will use it as a categorical variable, not as a numeric variable. 
+
+What would this model predict for the first quarter of 2017?
+
+```{r}
+predict(m3, newdata = data.frame(t = 137, Qtr = 1))
+exp(predict(m3, newdata = data.frame(t = 137, Qtr = 1)))
+```
+
+Let's look at the residual plots again.
+
+```{r}
+plot(m3, which = 1)
+```
+
+There is still clearly some trend in the residual plot. 
+
+## Cosine trend model
+
+Another way to describe the variability over a repeating pattern is to use the cosine trend model. 
+
+$$
+Y = \beta_0 + \alpha \cdot cos\left(\frac{2\pi t}{12}+\theta\right)+\epsilon
+$$
+
+This model is non-linear, but we can use trigonometry to reorder it,
+
+$$
+Y = \beta_0 + \alpha \cdot cos(\theta)\cdot cos\left(\frac{2\pi t}{12}\right)  - \alpha \cdot sin(\theta) \cdot sin\left(\frac{2\pi t}{12}\right)
+$$
+Then, we can call $X_{cos} = cos\left(\frac{2\pi t}{12}\right)$ and $X_{sin} = sin\left(\frac{2\pi t}{12}\right)$ and model
+$$
+Y = \beta_0 + \beta_1 X_{cos} + \beta_2 X_{sin}
+$$
+
+The easiest way to do this in R is to make new variables for Xcos and Xsin. 
+
+```{r}
+ResidualOil <- ResidualOil %>%
+  mutate(Xcos = cos(2 * pi * t / 12), Xsin = sin(2 * pi * t / 12))
+```
+
+Then, we can just use `lm()` to fit the model. 
+
+```{r}
+m4 <- lm(LogOil ~ t + Xcos + Xsin, data = ResidualOil)
+summary(m4)
+```
+
+What would this model predict for the first quarter of 2017?
+
+```{r}
+predict(m4, newdata = data.frame(t = 137, Xcos = cos(2 * pi * 137 / 12), Xsin = sin(2 * pi * 137 / 12)))
+exp(predict(m4, newdata = data.frame(t = 137, Xcos = cos(2 * pi * 137 / 12), Xsin = sin(2 * pi * 137 / 12))))
+```
+
+## ARIMA
+
+We can also get even fancier and use an ARIMA model. ARIMA models use three parameters: $p$ for autoregressive terms, $d$ for differences, and $q$ for moving average terms. We'll build these up slowly. 
+
+For any ARIMA model, we need a time series object for our predictions. 
+
+## Making a time series object
+
+```{r}
+LogOil_ts <- ts(ResidualOil$LogOil, start = c(1983, 1), frequency = 4)
+```
+
+Common frequencies are 1 (yearly), 12 (monthly), and 4 (quarterly). 
+
+Time series objects are their own class, and have their own plotting method. We can also do ACF plots to look at the autocorrelation. 
+
+```{r}
+class(LogOil_ts)
+plot(LogOil_ts)
+Acf(LogOil_ts)
+```
+
+If we were interested in differences, we could compute those.
+
+```{r}
+ResidualOil <- ResidualOil %>%
+  mutate(diff = LogOil - lag(LogOil))
+```
+
+1. Look at the `ResidualOil` dataset. What does `diff` look like? 
+
+We could make diff a time series object and look at the ACF plot of the differences,
+
+```{r}
+diff_ts <- ts(ResidualOil$diff, start = c(1983, 2), frequency = 4)
+```
+
+1. Why do we use `2` in the `start` here? 
+
+```{r}
+plot(diff_ts)
+Acf(diff_ts)
+```
+
+## Auto-regressive model
+
+An [autoregressive model](http://en.wikipedia.org/wiki/Autoregressive_model) uses previous instances of each measurement as a predictor in a linear model for future instances. 
+
+$$
+  Y_t = \beta_0 + \sum_{i=1}^p \beta_i Y_{t-i} + \epsilon_t \,,
+$$
+
+where the parameters to be fit are the $\beta_i$'s. As usual, the error terms are assumed to follow a normal distribution with mean 0 (e.g. $\epsilon \sim N(0, \sigma)$). We can fit the model using OLS regression, but here we will use a special `Arime()` function in R. 
+
+For an autoregressive model, we will use the $p$ parameter in the `Arima()` function. For a first-order autoregressive model, we use `order=c(1,0,0)`.
+
+```{r}
+m5 <- Arima(LogOil_ts, order = c(1, 0, 0), include.constant = TRUE)
+m5
+coeftest(m5)
+```
+
+If we want to write out this model, we need to do a little arithmetic to get the actual $\delta$ coefficient. 
+
+```{r}
+3.585617 * (1 - 0.985135)
+```
+
+$$
+\hat{y}_t = 0.05 + 0.985\cdot y_{t-1}
+$$
+
+## Moving average model
+
+A [Moving average](http://en.wikipedia.org/wiki/Moving-average_model) model is similar to an auto-regressive model, but uses the error terms as predictors rather than the previous data values. That is, here the measurements are based on the lagged *errors*, rather than the lagged *observed values*. 
+
+The moving average model of order $q$ is denoted $MA(q)$:
+
+$$
+  Y_t = \mu + \sum_{i=1}^q \theta_i \epsilon_{t-i} + \epsilon_t \,,
+$$
+where the parameters to be fit are the $\theta_i$'s. 
+
+For a moving average model, we use the third term in the `order` parameter. 
+
+```{r}
+m6 <- Arima(LogOil_ts, order = c(0, 0, 1), include.constant = TRUE)
+m6
+coeftest(m6)
+```
+
+Nicely, if we want to write out the equation here we don't have to do any arithmetic. But we do need to remember that the moving average is about residuals.
+
+$$
+\hat{y}_t = 3.65 + 0.79\cdot\hat{\epsilon}_{t-1}
+$$
+
+## ARIMA model
+
+An [ARMA model](http://en.wikipedia.org/wiki/Autoregressive%E2%80%93moving-average_model) combines the ideas of autoregressive model with moving average models. 
+
+$$
+  Y_t = \mu + \sum_{i=1}^p \beta_i Y_{t-i} + \sum_{i=1}^q \theta_i \epsilon_{t-i} + \epsilon_t \,.
+$$
+The [ARIMA model](http://en.wikipedia.org/wiki/Autoregressive_integrated_moving_average) is a generalization of the ARMA model that includes a third parameter for taking the differences of consecutive terms. This the parameter $d$ in the $ARIMA(p,d,q)$ model. 
+
+Here, we use multiple parameters at once. 
+
+```{r}
+m6 <- Arima(LogOil_ts, order = c(0, 1, 1), include.constant = TRUE)
+m6
+coeftest(m6)
+```
+
+We can even bring in seasonal terms by using the `seasonal` argument.
+
+```{r}
+m7 <- Arima(LogOil_ts, order = c(1, 0, 0), seasonal = list(order = c(1, 1, 0)), include.constant = TRUE)
+m7
+coeftest(m7)
+```
+
+```{r}
+Acf(residuals(m7))
+```
+
+```{r}
+m8 <- Arima(LogOil_ts, order = c(1, 0, 0), seasonal = list(order = c(0, 1, 1)), include.constant = TRUE)
+m8
+coeftest(m8)
+```
+
+```{r}
+Acf(residuals(m8))
+```
+
+## Forecasting
+
+If you have an ARIMA model, you can forecast into the future
+
+```{r}
+future_m8 <- forecast(m8, h = 12)
+future_m8
+plot(future_m8)
+```

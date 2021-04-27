@@ -1,0 +1,222 @@
+---
+title: "Research visualizations for paper"
+author: "Luca Comba"
+date: "4/19/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Overview
+
+Using R it will be convinent to create graph and visualization for the paper. It is our intent to utilize R packages such as `ggplot2` to visualize data and models to export and include them into the written and presentation of the research paper.
+
+# For the paper
+
+The paper is structured with 5 sections. They all base their content on the dataset and analysis made on the dataset. It is important to follow readability structure of the data and be mindful of colors and labels in order to create easy to understand and read visualizations.
+
+We will start by loading the needed r packages.
+
+```{r, results='hide', warning=FALSE, results='hide',message=FALSE}
+library(tidyverse) # this includes ggplot and dplyr
+library(maps) # to create maps
+library(rgdal) # for reading shape files
+library(sf)
+library(grid) # for making grids
+library(gridExtra) # another package for tables
+library(cowplot) # for making table of plots
+library(RColorBrewer) # for nice color pallet
+```
+
+It will be necessary to load the correct dataset.
+
+```{r, results='hide'}
+# data for Fargo
+fargo <- read.csv("C:/Users/Luca/Desktop/SPRING2021/Statistical Research/Correct Dataset/fargo_corrected_discharge.csv", encoding="UTF-8")
+# data for Grand
+grand <- read.csv("C:/Users/Luca/Desktop/SPRING2021/Statistical Research/Correct Dataset/grand_corrected_discharge.csv", encoding="UTF-8")
+```
+
+## 1. Introduction
+
+The visualizations are in the `research_visualization_general.Rmd` file.
+
+## 2. Data and methods
+
+A table of the data would be nice.
+
+```{r}
+grid_grand <- grand %>%
+  select(date, discharge, ConsecutiveDaysofLessDischarge, SizeOfDischargeByDay, Spring, Summer) %>% 
+  head(15) %>%
+  tableGrob()
+
+h = grid::convertHeight(sum(grid_grand$heights), "in", TRUE)
+w = grid::convertWidth(sum(grid_grand$widths), "in", TRUE)
+
+ggsave("grand_grid_first15.jpg", grid_grand, width = w, height = h)
+
+```
+
+#### grand
+
+Some primamry data to show the distribution
+
+```{r}
+grand$year <- as.factor(grand$year)
+
+grand_discharge_x_year <- grand %>%
+  ggplot() +
+  geom_line(aes(x=days,y=discharge.mm.day, group=year, color = year)) +
+  theme_minimal() +
+  xlab("julian days") +
+  ylab("discharge in mm per day") +
+  scale_color_brewer(palette="Dark2") +
+  ggtitle("grand hydrograph")
+
+# with log scale
+grand_discharge_x_year_log <- grand %>%
+  ggplot() +
+  geom_line(aes(x=days,y=discharge.mm.day, group=year, color = year)) +
+  theme_minimal() +
+  xlab("julian days") +
+  ylab("discharge in mm per day") +
+  scale_y_continuous(trans='log2') +
+  scale_color_brewer(palette="Dark2") +
+  ggtitle("grand hydrograph in log scale")
+
+plot_grid(grand_discharge_x_year, grand_discharge_x_year_log, ncol = 1, align = "v")
+```
+
+
+```{r}
+grand_discharge_by_year <- grand %>%
+  ggplot() +
+  geom_line(aes(x=days,y=discharge.mm.day)) +
+  scale_color_brewer(palette="Dark2") +
+  xlab("julian days") +
+  ylab("discharge in mm per day") +
+  facet_grid(year~.) +
+  theme_minimal() +
+  ggtitle("grand daily discharge by year")
+grand_discharge_by_year
+```
+
+Other variables
+
+```{r}
+grand_temp <- grand %>%
+  ggplot() + 
+  geom_line(aes(x=days,y=avg.temp, group=year, color = year)) +
+  scale_color_brewer(palette="Dark2") +
+  xlab("julian days") +
+  ylab("C") +
+  theme_minimal() +
+  ggtitle("grand daily average temperature")
+
+grand_snow <- grand %>%
+  ggplot() + 
+  geom_line(aes(x=days,y=snow.depth, group=year, color = year)) +
+  scale_color_brewer(palette="Dark2") +
+  xlab("julian days") +
+  ylab("mm") +
+  theme_minimal() +
+  ggtitle("grand daily average temperature")
+
+grand_topsoil <- grand %>%
+  ggplot() + 
+  geom_line(aes(x=days,y=top.soil.temp, group=year, color = year)) +
+  scale_color_brewer(palette="Dark2") +
+  xlab("julian days") +
+  ylab("C") +
+  theme_minimal() +
+  ggtitle("grand daily average top soil temperature")
+
+grand_pen <- grand %>%
+  ggplot() + 
+  geom_line(aes(x=days,y=penman.pet, group=year, color = year)) +
+  scale_color_brewer(palette="Dark2") +
+  xlab("julian days") +
+  ylab("potential evapotranspiration") +
+  theme_minimal() +
+  ggtitle("grand daily potential evapotranspiration")
+
+#multiplot(grand_discharge_x_year, grand_temp, grand_snow, grand_topsoil, cols=2)
+plot_grid(grand_temp, grand_snow, grand_topsoil, grand_pen, labels = c('A', 'B', 'C', 'D'), ncol = 1, align = "v", label_size = 12)
+```
+
+## 3. Results
+
+For sure we would need to show a graph of the time series and highlight the differences in the spring and summer periods.
+
+#### Recession Analysis
+
+Now we can more easily highlight the spring and summer
+
+```{r}
+grand_discharge_rec <- grand %>% 
+  filter(year == 2019) %>%
+  ggplot(aes(x=days,y=discharge.mm.day, color = as.factor(season))) +
+  geom_path(aes(group = 1)) +
+  geom_point(data = filter(grand, RecessionDay == 1 & year == 2019 & 
+                             season != 0 & 
+                             ConsecutiveDaysofLessDischarge >= 5), 
+             aes(x=days,y=discharge.mm.day,color = as.factor(season))) +
+  xlab("julian days") +
+  ylab("discharge in mm/day") +
+  ggtitle("Grand 2019 hydrograph", 
+          subtitle = "showing consecutive days of at least 5 days of recessions") +
+  scale_color_manual(name="Season",
+                       labels=c("Neither","Spring","Summer"),
+                       values=c("chocolate1","cadetblue3","navyblue")) +
+  theme_minimal()
+
+grand_discharge_rec
+```
+
+
+```{r}
+
+grand %>% 
+  ggplot(aes(x=days,y=discharge.mm.day, color = as.factor(season))) +
+  geom_path(group = 1) +
+  geom_point(data = filter(grand, RecessionDay == 1 & 
+                             season != 0 & 
+                             ConsecutiveDaysofLessDischarge >= 5), 
+             aes(x=days,y=discharge.mm.day,color = as.factor(season))) +
+  scale_color_manual(name="Season",
+                       labels=c("Neither","Spring","Summer"),
+                       values=c("chocolate1","cadetblue3","navyblue")) +
+  xlab("julian days") +
+  ylab("discharge in mm/day") +
+  facet_grid(year~.) +
+  theme_minimal()
+
+```
+
+Another necessary graph would be to show the results of the 
+
+```{r}
+grand %>%
+  filter(year == 2019) %>%
+  ggplot() +
+  geom_histogram(aes(x=discharge, fill = as.factor(season)), binwidth = 1000, position = "identity", alpha = 0.8) +
+  scale_fill_brewer(palette="Dark2") +
+  xlab("discharge in ft^3/sec") +
+  ylab("count") +
+  scale_fill_manual(values=c("#D0813B","#B7F5FD","#021D8F"), name = "Seasons",labels=c("Neither", "Spring", "Summer")) +
+  theme_minimal() +
+  ggtitle("Grand Forks 2019 discharge", 
+          subtitle = "shows different season and discharge distribution")
+
+```
+
+Maybe a histogram resulting of bootstrapping
+
+
+
+## 4. Discussion + 5. Conclusion
+
+I don't think there would be the need to show any visualizations for these two sections of the paper.

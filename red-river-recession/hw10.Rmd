@@ -1,0 +1,25 @@
+---
+title: "Hw #10"
+author: "Your name"
+date: "Due Friday, December 11"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(Stat2Data)
+library(skimr)
+library(forecast)
+```
+
+
+***
+
+* Reading: Ch. 12
+* Exercises to hand in:  12.7, 12.8, 12.9, 12.22, 12.23, 12.24
+
+***
+
+The textbook authors made a typo in part a) of 12.24. It should read: 
+a. Fit a first-order moving average model to the differences of the CPI series (i.e., an ARIMA(0,1,1) model). Check if the constant term is important to keep in the model. If not, drop it and refit. Write down the fitted ARIMA(0,1,1) model.

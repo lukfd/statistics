@@ -1,0 +1,80 @@
+---
+title: "Recession Analysis"
+author: "Luca Comba"
+date: "3/22/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(lubridate)
+library(ggplot2)
+library(lfstat)
+```
+
+# Reading files
+We have made two complete datasets that have the data for the two stations: Fargo (ND) and Grand Forks (ND). We read the csv files.
+```{r, echo = F}
+fargo<- read.csv("C:/Users/Luca/Desktop/SPRING2021/Statistical Research/Correct Dataset/fargo.csv", encoding="UTF-8")
+grand <- read.csv("C:/Users/Luca/Desktop/SPRING2021/Statistical Research/Correct Dataset/grand.csv", encoding="UTF-8")
+```
+
+# Recession Analysis
+
+For running a Recession Analysis with the R language we will use the *lfstat* package which was developed by Daniel Koffler, Tobias Gauster and Gregor Laaha. This package is designed for Low-Flow Statistics for Daily Stream Flow Data, which reflects what the data that has been collected is.
+
+For creating a `lfobj` which is used by the *lestat* package we need to have discharge time series which we can build by using the method `ts()`.
+
+```{r, results='hide'}
+grand_discharge_ts <- ts(grand$discharge, start = c(2014,10), end = c(2020,11),  frequency = 365)
+
+grand_dis <- createlfobj(grand_discharge_ts, startdate = "02/10/2014", baseflow = FALSE)
+
+is.lfobj(grand_dis)
+```
+
+Then we can also find the baseflow of the river
+```{r, results='hide'}
+plot(grand$discharge, type = "l", main = "baseflow")
+lines(baseflow(grand$discharge), col = 2)
+```
+
+"*Does recession analysis using either the MRC (Master recession curve) or IRS (individual recession segments) method.*"
+
+We first need to find the correct seglen value. By finding the max of the rainfall we can tell what is the rain peak.
+
+```{r}
+seglenplot(grand_dis)
+```
+
+We can now use the function for creating the recession analysis for Grand Forks from 2015 to 2021.
+
+```
+recession(lfobj,
+  method = c("MRC", "IRS"),
+  seglength,
+  threshold,
+  peaklevel = 0.95,
+  seasonbreakdays = NULL,
+  thresbreaks = c("fixed", "monthly","seasonal"),
+  thresbreakdays = NULL,
+  plotMRC = TRUE,
+  trimIRS = 0,
+  na.rm = TRUE)
+```
+
+```{r}
+recession(grand_dis, method = "MRC", seglen = 7, threshold = 70)
+```
+
+
+By using the IRS method
+
+```{r}
+recession(grand_dis, method = "IRS", seglen = 7, threshold = 70)
+```
+```{r}
+recessionplot(grand_dis, start = 2016, end = 2016)
+```
+
+

@@ -1,0 +1,300 @@
+---
+title: "analysis"
+author: "Luca Comba"
+date: "3/2/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(lubridate)
+library(ggplot2)
+
+library(tidyverse)
+library(skimr)
+library(forecast)
+library(lmtest)
+```
+# Data Cleaning steps
+
+### Reading the Data
+```{r}
+fargo_no_soil <- read.csv("C:/Users/Luca/Desktop/SPRING2021/Statistical Research/Combined data/fargo.csv", encoding="UTF-8")
+grand_no_soil <- read.csv("C:/Users/Luca/Desktop/SPRING2021/Statistical Research/Combined data/grand.csv", encoding="UTF-8")
+
+fargo_from_2014 <- read.csv("C:/Users/Luca/Desktop/SPRING2021/Statistical Research/Combined data/fargo_from_2014.csv", encoding="UTF-8")
+grand_from_2014 <- read.csv("C:/Users/Luca/Desktop/SPRING2021/Statistical Research/Combined data/grand_from_2014.csv", encoding="UTF-8")
+```
+
+adding the data with libridate
+```{r}
+fargo_no_soil$date <- make_date(year=fargo_no_soil$year, month = fargo_no_soil$month,day=fargo_no_soil$day)
+
+grand_no_soil$date <- make_date(year=grand_no_soil$year, month =grand_no_soil$month,day=grand_no_soil$day)
+
+```
+
+
+# Time Series Analysis
+First, let's create date
+```{r}
+grand_from_2014$date <- make_date(year=grand_from_2014$year, month =grand_from_2014$month,day=grand_from_2014$day)
+
+fargo_from_2014$date <- make_date(year=fargo_from_2014$year, month =fargo_from_2014$month,day=fargo_from_2014$day)
+```
+
+After reading the data we are creating a Time Series object.
+
+Terms to remember
+p regular autoregressive terms
+d regular differences
+q moving average terms
+P seasonal autoregressive terms
+D seasonal differences
+Q seasonal moving average terms
+
+
+### Average Temperature
+
+```{r}
+grand_ts_avg_temp <- ts(grand_from_2014$avg.temp)
+fargo_ts_avg_temp <- ts(fargo_from_2014$avg.temp)
+
+class(grand_ts_avg_temp)
+plot(grand_ts_avg_temp)
+Acf(grand_ts_avg_temp)
+
+class(fargo_ts_avg_temp)
+plot(fargo_ts_avg_temp)
+Acf(fargo_ts_avg_temp)
+
+g_temp <- Arima(grand_ts_avg_temp, order = c(0, 0, 1),  seasonal = list(order = c(1, 1, 0)), include.constant = TRUE)
+g_temp
+coeftest(g_temp)
+
+f_temp <- Arima(fargo_ts_avg_temp, order = c(0, 0, 1),  seasonal = list(order = c(1, 1, 0)), include.constant = TRUE)
+f_temp
+coeftest(f_temp)
+```
+
+### Soil Temperature
+```{r}
+grand_ts_soil <- ts(grand_from_2014$soil.200)
+fargo_ts_soil <- ts(fargo_from_2014$soil.200)
+
+class(grand_ts_soil)
+plot(grand_ts_soil)
+Acf(grand_ts_soil)
+
+class(fargo_ts_soil)
+plot(fargo_ts_soil)
+Acf(fargo_ts_soil)
+
+g_soil <- Arima(grand_ts_soil, order = c(0, 0, 1),  seasonal = list(order = c(1, 1, 0)), include.constant = TRUE)
+g_soil
+coeftest(g_soil)
+
+f_soil <- Arima(fargo_ts_soil, order = c(0, 0, 1),  seasonal = list(order = c(1, 1, 0)), include.constant = TRUE)
+f_soil
+coeftest(f_soil)
+```
+### PENman
+```{r}
+grand_ts_pen <- ts(grand_from_2014$penman.pet)
+fargo_ts_pen <- ts(fargo_from_2014$penman.pet)
+
+class(grand_ts_pen)
+plot(grand_ts_pen)
+Acf(grand_ts_pen)
+
+class(fargo_ts_pen)
+plot(fargo_ts_pen)
+Acf(fargo_ts_pen)
+
+g_temp <- Arima(grand_ts_avg_temp, order = c(0, 0, 1),  seasonal = list(order = c(1, 1, 0)), include.constant = TRUE)
+g_temp
+coeftest(g_temp)
+
+f_temp <- Arima(fargo_ts_avg_temp, order = c(0, 0, 1),  seasonal = list(order = c(1, 1, 0)), include.constant = TRUE)
+f_temp
+coeftest(f_temp)
+```
+### Snow depth
+```{r}
+grand_ts_snow <- ts(grand_from_2014$snow.depth)
+fargo_ts_snow <- ts(fargo_from_2014$snow.depth)
+
+class(grand_ts_snow)
+plot(grand_ts_snow)
+Acf(grand_ts_snow)
+
+class(fargo_ts_snow)
+plot(fargo_ts_snow)
+Acf(fargo_ts_snow)
+
+g_snow <- Arima(grand_ts_snow, order = c(0, 0, 1),  seasonal = list(order = c(1, 1, 0)), include.constant = TRUE)
+g_snow
+coeftest(g_snow)
+
+f_snow <- Arima(fargo_ts_snow, order = c(0, 0, 1),  seasonal = list(order = c(1, 1, 0)), include.constant = TRUE)
+f_snow
+coeftest(f_snow)
+```
+### Rainfall
+```{r}
+grand_ts_rain <- ts(grand_from_2014$rainfall)
+fargo_ts_rain <- ts(fargo_from_2014$rainfall)
+
+class(grand_ts_rain)
+plot(grand_ts_rain)
+Acf(grand_ts_rain)
+
+class(fargo_ts_rain)
+plot(fargo_ts_rain)
+Acf(fargo_ts_rain)
+
+g_rain <- Arima(grand_ts_rain, order = c(0, 0, 1),  seasonal = list(order = c(1, 1, 0)), include.constant = TRUE)
+g_rain
+coeftest(g_rain)
+
+f_rain <- Arima(fargo_ts_rain, order = c(0, 0, 1),  seasonal = list(order = c(1, 1, 0)), include.constant = TRUE)
+f_rain
+coeftest(f_rain)
+```
+
+
+### Discharge
+
+```{r}
+grand_ts_discharge <- ts(grand_from_2014$discharge, frequency = 1)
+fargo_ts_discharge <- ts(fargo_from_2014$discharge, frequency = 1)
+
+class(grand_ts_discharge)
+plot(grand_ts_discharge)
+Acf(grand_ts_discharge)
+
+class(fargo_ts_discharge)
+plot(fargo_ts_discharge)
+Acf(fargo_ts_discharge)
+
+g_dis <- Arima(grand_ts_discharge, order = c(0, 0, 1),  seasonal = list(order = c(1, 1, 0)), include.constant = TRUE)
+g_dis
+coeftest(g_dis)
+
+f_dis <- Arima(fargo_ts_discharge, order = c(0, 0, 1),  seasonal = list(order = c(1, 1, 0)), include.constant = TRUE)
+f_dis
+coeftest(f_dis)
+```
+
+
+
+# Vector Autoregression Analysis
+
+```{r}
+library(vars)
+```
+
+```{r}
+VAR_data <- window(ts.union(grand_ts_avg_temp, grand_ts_discharge,grand_ts_pen,grand_ts_soil))
+
+VAR_data <- VAR_data[complete.cases(VAR_data), ]
+# estimate model coefficients using `VAR()`
+VAR_est <- VAR(y = VAR_data, p = 2)
+VAR_est
+```
+```{r}
+summary(VAR_est$varresult$grand_ts_discharge)$adj.r.squared
+```
+
+```{r}
+linearHypothesis(VAR_EQ1, 
+                 hypothesis.matrix = c("grand_ts_discharge.l1", "grand_ts_discharge.l2"),
+                 vcov. = sandwich)
+```
+
+
+# Better Visualization
+
+For computation matter let's just take the year of 2018
+```{r}
+grand_2018 <- grand_from_2014[grand_from_2014$year==2018,]
+rownames(grand_2018) <- 1:nrow(grand_2018)
+
+# make discharge continuous
+grand_2018$discharge_numeric <- as.numeric(grand_2018$discharge)
+grand_2018$discharge_numeric_lower <- grand_2018$discharge_numeric / 100
+```
+
+```{r}
+ggplot(data = grand_2018, aes(x = date, y = discharge_numeric_lower)) +
+  geom_line(color = "#8ecae6", size = 1)
+```
+
+```{r}
+df <- grand_2018 %>%
+  select(date, discharge_numeric_lower, avg.temp) %>%
+  gather(key = "variable", value = "value", -date)
+```
+
+Discharge in relation with the average temperature
+
+```{r}
+ggplot(df, aes(x = date, y = value)) + 
+  geom_line(aes(color = variable), size = 1) +
+  scale_color_manual(values = c("#8ecae6", "#ffb703")) +
+  theme_minimal()
+```
+
+This is with soil temperatures
+
+```{r}
+df2 <- grand_2018 %>%
+  select(date, discharge_numeric_lower,soil.50,soil.150,soil.200) %>%
+  gather(key = "variable", value = "value", -date)
+
+
+ggplot(df2, aes(x = date, y = value)) + 
+  geom_line(aes(color = variable), size = 1) +
+  scale_color_manual(values = c("#8ecae6", "#d90429", "#ffb703","#fb8500")) +
+  theme_minimal()
+```
+
+```{r}
+df3 <- grand_2018 %>%
+  select(date, discharge_numeric, rainfall, snow.depth) %>%
+  gather(key = "variable", value = "value", -date)
+
+
+ggplot(df3, aes(x = date, y = value)) + 
+  geom_line(aes(color = variable), size = 1) +
+  scale_color_manual(values = c("#8ecae6", "#d90429", "#ffb703")) +
+  theme_minimal()
+```
+
+# Remembering outliers
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

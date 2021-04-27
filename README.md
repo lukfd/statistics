@@ -13,6 +13,8 @@ These are the folders where you can find some *CSV* files and some *R* analysis 
 
 - **Logorev** , Predict and understand how companies's logo's characteristics can have an economic impact on their revenues. (Data Mining class project)
 
+- **red-river-recession** , Statistical research on soil frost effects on streamflow recession in the Red River Basin (MN, U.S.A.)
+
 ## IDEA OF STATISTICAL QUESTIONS:
 
 - Song contest, Festival di Sanremo
