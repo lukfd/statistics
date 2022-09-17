@@ -1,7 +1,7 @@
 # statistics
 
 > Free access. Writen by Luca Comba
-> my email : comb6457@stthomas.edu
+> school email: comb6457@stthomas.edu
 
 #### A quick guide
 
